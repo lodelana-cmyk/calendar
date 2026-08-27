@@ -598,7 +598,7 @@ export function ContentCalendar() {
           onOpenChange={open => { if (!open) setNewItemDate(null) }}
         />
       )}
-      <ImportPlanDialog open={importOpen} onOpenChange={setImportOpen} />
+      <ImportPlanDialog open={importOpen} onOpenChange={setImportOpen} calendarYear={year} calendarMonth={month} />
       <ExportCalendarDialog
         open={exportOpen}
         onOpenChange={setExportOpen}

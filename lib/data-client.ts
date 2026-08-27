@@ -80,6 +80,17 @@ export async function createContentItemClient(
   return data as ContentItem
 }
 
+/** Insert many content items in one round trip — used by bulk imports so a mid-batch failure doesn't leave a half-written campaign. */
+export async function createContentItemsClient(
+  items: (Partial<Omit<ContentItem, "id" | "created_at" | "updated_at">> & { campaign_id: string | null; title: string })[]
+): Promise<ContentItem[]> {
+  if (items.length === 0) return []
+  const supabase = createClient()
+  const { data, error } = await supabase.from("content_items").insert(items).select()
+  if (error) throw error
+  return (data ?? []) as ContentItem[]
+}
+
 export async function updateContentItemClient(id: string, updates: Partial<ContentItem>): Promise<ContentItem> {
   const supabase = createClient()
   const { data, error } = await supabase
