@@ -30,53 +30,45 @@ function parseDateStr(s: string): Date {
   return new Date(y, m - 1, d)
 }
 
-/** Mon–Fri grid for the month, padded so columns align */
-function weekdayGrid(year: number, month: number): (string | null)[][] {
+/** Full Mon–Sun grid for the month, padded so columns align */
+function monthGrid(year: number, month: number): (string | null)[][] {
   const weeks: (string | null)[][] = []
   let current: (string | null)[] = []
   const first = new Date(year, month, 1)
   const last  = new Date(year, month + 1, 0)
 
-  const firstDow = first.getDay()
-  if (firstDow >= 2 && firstDow <= 5) {
-    for (let i = 1; i < firstDow; i++) current.push(null)
-  } else if (firstDow === 1) {
-    // Monday — no padding
-  } else {
-    // Sunday or Saturday — skip to next Monday
-  }
+  // Front-pad so day 1 lands in its Mon(0)..Sun(6) column
+  const firstDow = first.getDay() // 0=Sun..6=Sat
+  const firstCol = firstDow === 0 ? 6 : firstDow - 1
+  for (let i = 0; i < firstCol; i++) current.push(null)
 
   for (let d = 1; d <= last.getDate(); d++) {
-    const date = new Date(year, month, d)
-    const dow  = date.getDay()
-    if (dow === 0 || dow === 6) continue
-    if (dow === 1 && current.length > 0) {
-      while (current.length < 5) current.push(null)
+    current.push(toDateStr(new Date(year, month, d)))
+    if (current.length === 7) {
       weeks.push(current)
       current = []
     }
-    current.push(toDateStr(date))
   }
   if (current.length > 0) {
-    while (current.length < 5) current.push(null)
+    while (current.length < 7) current.push(null)
     weeks.push(current)
   }
   return weeks
 }
 
-/** Mon–Fri of the ISO week containing `date` */
+/** Full Mon–Sun of the week containing `date` */
 function currentWeekDays(date: Date): (string | null)[] {
   const dow = date.getDay()
   const monday = new Date(date)
   monday.setDate(date.getDate() - (dow === 0 ? 6 : dow - 1))
-  return Array.from({ length: 5 }, (_, i) => {
+  return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(monday)
     d.setDate(monday.getDate() + i)
     return toDateStr(d)
   })
 }
 
-const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri"]
+const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 const MONTHS = [
   "January","February","March","April","May","June",
   "July","August","September","October","November","December"
@@ -345,19 +337,19 @@ export function ContentCalendar() {
   // ── month grid ────────────────────────────────────────────────────────────
 
   const renderMonthGrid = () => {
-    const grid = weekdayGrid(year, month)
+    const grid = monthGrid(year, month)
     return (
       <div className="rounded-2xl border border-border overflow-hidden">
         {/* weekday headers */}
-        <div className="grid grid-cols-5 border-b border-border bg-surface-container-low">
-          {WEEKDAY_LABELS.map(d => (
+        <div className="grid grid-cols-7 border-b border-border bg-surface-container-low">
+          {DAY_LABELS.map(d => (
             <div key={d} className="text-center py-2 text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
               {d}
             </div>
           ))}
         </div>
         {grid.map((week, wi) => (
-          <div key={wi} className="grid grid-cols-5 border-b border-border last:border-b-0 divide-x divide-border">
+          <div key={wi} className="grid grid-cols-7 border-b border-border last:border-b-0 divide-x divide-border">
             {week.map((date, di) => (
               <div key={di} className="min-h-[110px] group/cell">
                 {renderCell(date)}
@@ -375,19 +367,19 @@ export function ContentCalendar() {
     const days = currentWeekDays(weekAnchor)
     return (
       <div className="rounded-2xl border border-border overflow-hidden">
-        <div className="grid grid-cols-5 border-b border-border bg-surface-container-low">
+        <div className="grid grid-cols-7 border-b border-border bg-surface-container-low">
           {days.map((date, i) => {
             const isToday = date === toDateStr(today)
             const d = date ? parseDateStr(date) : null
             return (
               <div key={i} className={`text-center py-3 ${isToday ? "bg-primary/10" : ""}`}>
-                <div className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">{WEEKDAY_LABELS[i]}</div>
+                <div className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">{DAY_LABELS[i]}</div>
                 {d && <div className={`text-lg font-bold mt-0.5 ${isToday ? "text-primary" : "text-on-surface"}`}>{d.getDate()}</div>}
               </div>
             )
           })}
         </div>
-        <div className="grid grid-cols-5 divide-x divide-border">
+        <div className="grid grid-cols-7 divide-x divide-border">
           {days.map((date, di) => (
             <div key={di} className="min-h-[300px] group/cell">
               {renderCell(date)}
@@ -401,7 +393,7 @@ export function ContentCalendar() {
   // ── list view ─────────────────────────────────────────────────────────────
 
   const renderListView = () => {
-    const grid = weekdayGrid(year, month)
+    const grid = monthGrid(year, month)
     return (
       <div className="flex flex-col gap-6">
         {grid.map((week, wi) => {
