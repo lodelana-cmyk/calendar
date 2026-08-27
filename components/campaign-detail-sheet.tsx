@@ -2,13 +2,13 @@
 
 import { useState } from "react"
 import { X, Plus, ExternalLink, Trash2 } from "lucide-react"
-import { useStore } from "@/lib/store"
+import { useStore, useIsEditor } from "@/lib/store"
 import { useRefreshData } from "@/components/data-provider"
-import { updateCampaignClient, deleteCampaignClient, createContentItemClient } from "@/lib/data-client"
+import { updateCampaignClient, deleteCampaignClient, createContentItemClient, moveContentItemsClient } from "@/lib/data-client"
 import type { CampaignWithItems, ContentItemWithCampaign, CampaignMotion, CampaignType } from "@/lib/database.types"
 import {
   MOTION_ACCENTS, MOTION_OPTIONS, TYPE_OPTIONS, PRODUCT_OPTIONS,
-  CHANNEL_ICONS, STATUS_COLORS
+  CHANNEL_ICONS, STATUS_COLORS, NO_CAMPAIGN_ID
 } from "@/lib/database.types"
 import { ContentItemDialog } from "@/components/content-item-dialog"
 
@@ -20,6 +20,7 @@ interface Props {
 export function CampaignDetailSheet({ campaign, onClose }: Props) {
   const { profiles, setCampaigns, campaigns } = useStore()
   const { refreshCampaigns } = useRefreshData()
+  const isEditor = useIsEditor()
 
   const [title,     setTitle]     = useState(campaign.title)
   const [type,      setType]      = useState<CampaignType>(campaign.type)
@@ -31,8 +32,43 @@ export function CampaignDetailSheet({ campaign, onClose }: Props) {
   const [newItemOpen,  setNewItemOpen]  = useState(false)
   const [confirmDel,   setConfirmDel]   = useState(false)
 
+  // Bulk move
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [moveTarget,  setMoveTarget]  = useState("")
+  const [moving,      setMoving]      = useState(false)
+  const [moveError,   setMoveError]   = useState("")
+
   const motionAccent = MOTION_ACCENTS[motion] || "#94a3b8"
   const items        = campaign.items || []
+  const allSelected  = items.length > 0 && selectedIds.size === items.length
+  const someSelected = selectedIds.size > 0
+  const otherCampaigns = campaigns.filter(c => c.id !== NO_CAMPAIGN_ID && c.id !== campaign.id)
+
+  const toggleSelected = (id: string) =>
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+
+  const toggleSelectAll = () =>
+    setSelectedIds(allSelected ? new Set() : new Set(items.map(i => i.id)))
+
+  const handleBulkMove = async () => {
+    if (selectedIds.size === 0) return
+    setMoving(true); setMoveError("")
+    try {
+      await moveContentItemsClient([...selectedIds], moveTarget || null)
+      await refreshCampaigns()
+      setSelectedIds(new Set())
+      setMoveTarget("")
+    } catch (e) {
+      setMoveError(e instanceof Error ? e.message : "Failed to move items")
+    } finally {
+      setMoving(false)
+    }
+  }
 
   const handleSave = async () => {
     setSaving(true)
@@ -148,7 +184,19 @@ export function CampaignDetailSheet({ campaign, onClose }: Props) {
           {/* Content items */}
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-on-surface">Content Items ({items.length})</h3>
+              <div className="flex items-center gap-2.5">
+                {isEditor && items.length > 0 && (
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    ref={el => { if (el) el.indeterminate = someSelected && !allSelected }}
+                    onChange={toggleSelectAll}
+                    className="h-4 w-4 rounded border-outline-variant accent-primary cursor-pointer"
+                    aria-label="Select all items"
+                  />
+                )}
+                <h3 className="text-sm font-bold text-on-surface">Content Items ({items.length})</h3>
+              </div>
               <button
                 onClick={() => setNewItemOpen(true)}
                 className="flex items-center gap-1.5 text-xs text-primary font-semibold hover:underline"
@@ -164,26 +212,70 @@ export function CampaignDetailSheet({ campaign, onClose }: Props) {
                 {enrichedItems.map(item => {
                   const dot = STATUS_COLORS[item.status]?.dot || "#94a3b8"
                   return (
-                    <button
-                      key={item.id}
-                      onClick={() => setSelectedItem(item)}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border hover:bg-surface-container-low transition-colors text-left group"
-                    >
-                      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: dot }} aria-hidden="true" />
-                      <span className="flex-1 min-w-0">
-                        <span className="text-sm font-medium text-on-surface truncate block">{item.title}</span>
-                        <span className="text-xs text-on-surface-variant">
-                          {CHANNEL_ICONS[item.channel] || ""} {item.channel}
-                          {item.publish_date && ` · ${new Date(item.publish_date + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`}
+                    <div key={item.id} className="flex items-center gap-2">
+                      {isEditor && (
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(item.id)}
+                          onChange={() => toggleSelected(item.id)}
+                          className="h-4 w-4 rounded border-outline-variant accent-primary cursor-pointer flex-shrink-0"
+                          aria-label={`Select ${item.title}`}
+                        />
+                      )}
+                      <button
+                        onClick={() => setSelectedItem(item)}
+                        className="flex-1 min-w-0 flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border hover:bg-surface-container-low transition-colors text-left group"
+                      >
+                        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: dot }} aria-hidden="true" />
+                        <span className="flex-1 min-w-0">
+                          <span className="text-sm font-medium text-on-surface truncate block">{item.title}</span>
+                          <span className="text-xs text-on-surface-variant">
+                            {CHANNEL_ICONS[item.channel] || ""} {item.channel}
+                            {item.publish_date && ` · ${new Date(item.publish_date + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`}
+                          </span>
                         </span>
-                      </span>
-                      <span className="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-md font-medium flex-shrink-0 border border-outline-variant bg-surface-container-low text-on-surface-variant">
-                        <span className="w-1.5 h-1.5 rounded-full" style={{ background: dot }} aria-hidden="true" />
-                        {item.status}
-                      </span>
-                    </button>
+                        <span className="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-md font-medium flex-shrink-0 border border-outline-variant bg-surface-container-low text-on-surface-variant">
+                          <span className="w-1.5 h-1.5 rounded-full" style={{ background: dot }} aria-hidden="true" />
+                          {item.status}
+                        </span>
+                      </button>
+                    </div>
                   )
                 })}
+              </div>
+            )}
+
+            {isEditor && someSelected && (
+              <div className="flex flex-wrap items-center gap-2 p-3 rounded-xl border border-outline-variant bg-surface-container-low">
+                <span className="text-xs font-semibold text-on-surface whitespace-nowrap">
+                  {selectedIds.size} selected
+                </span>
+                <select
+                  value={moveTarget}
+                  onChange={e => setMoveTarget(e.target.value)}
+                  className="px-2.5 py-1.5 rounded-lg border border-outline-variant bg-surface-container text-on-surface text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+                  aria-label="Destination campaign"
+                >
+                  <option value="">No campaign</option>
+                  {otherCampaigns.map(c => (
+                    <option key={c.id} value={c.id}>{c.title}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={handleBulkMove}
+                  disabled={moving}
+                  className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                >
+                  {moving ? "Moving…" : "Move"}
+                </button>
+                <button
+                  onClick={() => setSelectedIds(new Set())}
+                  disabled={moving}
+                  className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-on-surface-variant hover:bg-surface-container-highest transition-colors"
+                >
+                  Clear
+                </button>
+                {moveError && <span className="text-xs text-red-600 font-medium w-full">{moveError}</span>}
               </div>
             )}
           </div>
