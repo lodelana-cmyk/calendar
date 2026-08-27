@@ -78,7 +78,11 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
       : { ...EMPTY_FORM, publish_date: defaultDate || null }
   )
   const realCampaigns = campaigns.filter(c => c.id !== NO_CAMPAIGN_ID)
-  const [campaignId, setCampaignId]   = useState(defaultCampaignId || realCampaigns[0]?.id || "")
+  // Existing items must start on their OWN campaign — defaulting to the first
+  // campaign here would silently re-parent the item on the next save.
+  const [campaignId, setCampaignId]   = useState(
+    item ? (item.campaign_id ?? "") : (defaultCampaignId || realCampaigns[0]?.id || "")
+  )
   const [contributors, setContribs]   = useState<Contributor[]>((item as any)?.contributors ?? [])
   const [saving, setSaving]           = useState(false)
   const [confirmDel, setConfirmDel]   = useState(false)
@@ -134,6 +138,7 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
         })
       } else {
         await updateContentItemClient(item!.id, {
+          campaign_id: campaignId || null,
           title: form.title.trim(),
           status: form.status,
           format: form.format,
@@ -254,16 +259,20 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
           {/* --- DETAILS TAB --- */}
           {activeTab === "details" && (
             <div className="overflow-y-auto flex flex-col gap-4 px-5 py-4">
-              {/* Campaign selector (new items only) */}
-              {isNew && (
-                <div className="flex flex-col gap-1.5">
-                  <FieldLabel>Campaign</FieldLabel>
+              {/* Campaign selector — also how an existing item is moved to another campaign */}
+              <div className="flex flex-col gap-1.5">
+                <FieldLabel>Campaign</FieldLabel>
+                {isEditor ? (
                   <select value={campaignId} onChange={e => setCampaignId(e.target.value)} className={selectCls()}>
                     <option value="">No campaign</option>
                     {realCampaigns.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
                   </select>
-                </div>
-              )}
+                ) : (
+                  <p className="text-sm text-on-surface px-3 py-2">
+                    {realCampaigns.find(c => c.id === campaignId)?.title ?? "No campaign"}
+                  </p>
+                )}
+              </div>
 
               <div className="grid grid-cols-2 gap-3">
                 {/* Status */}

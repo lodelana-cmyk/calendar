@@ -95,6 +95,20 @@ export async function deleteContentItemClient(id: string): Promise<void> {
   if (error) throw error
 }
 
+/**
+ * Re-parent many items to one campaign in a single statement, so a bulk move
+ * can't half-apply. Pass null to detach the items from any campaign.
+ */
+export async function moveContentItemsClient(ids: string[], campaignId: string | null): Promise<void> {
+  if (ids.length === 0) return
+  const supabase = createClient()
+  const { error } = await supabase
+    .from("content_items")
+    .update({ campaign_id: campaignId, updated_at: new Date().toISOString() })
+    .in("id", ids)
+  if (error) throw error
+}
+
 // ---- Full data fetch (client) ----
 
 export async function getCampaignsWithItemsClient(): Promise<CampaignWithItems[]> {
