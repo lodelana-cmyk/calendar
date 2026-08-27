@@ -243,7 +243,7 @@ export function ContentCalendar() {
 
   const renderCell = (date: string | null, mini = false) => {
     const isToday   = date === toDateStr(today)
-    const isTarget  = date === dragOverDate
+    const isTarget  = date !== null && date === dragOverDate
     const dayNum    = date ? parseDateStr(date).getDate() : null
     const items     = date ? itemsForDate(date) : []
 
