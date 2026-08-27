@@ -5,13 +5,14 @@ import {
   ChevronLeft, ChevronRight, Plus, CalendarDays, List,
   Sparkles, Download, Columns
 } from "lucide-react"
-import { useStore } from "@/lib/store"
+import { useStore, useIsEditor } from "@/lib/store"
 import { useRefreshData } from "@/components/data-provider"
-import { updateContentItemClient } from "@/lib/data-client"
+import { updateContentItemClient, moveContentItemsClient } from "@/lib/data-client"
 import type { ContentItemWithCampaign, ItemStatus } from "@/lib/database.types"
 import {
   MOTION_ACCENTS, CHANNEL_ICONS, STATUS_COLORS,
-  CHANNEL_OPTIONS, MOTION_OPTIONS, STATUS_OPTIONS, PRODUCT_OPTIONS
+  CHANNEL_OPTIONS, MOTION_OPTIONS, STATUS_OPTIONS, PRODUCT_OPTIONS,
+  NO_CAMPAIGN_ID
 } from "@/lib/database.types"
 import { ContentItemChip } from "@/components/content-item-chip"
 import { ContentItemDialog } from "@/components/content-item-dialog"
@@ -88,6 +89,7 @@ type ViewMode = "month" | "week" | "list"
 export function ContentCalendar() {
   const { campaigns, profiles, setCampaigns } = useStore()
   const { refreshCampaigns } = useRefreshData()
+  const isEditor = useIsEditor()
 
   const today       = new Date()
   const [year, setYear]   = useState(today.getFullYear())
@@ -130,6 +132,14 @@ export function ContentCalendar() {
     window.history.replaceState(null, "", qs ? `?${qs}` : window.location.pathname)
   }, [filterCampaign, filterChannel, filterAssignee, filterMotion, filterProduct, filterStatus])
 
+  // Drop the selection whenever the visible set changes, so nothing stays
+  // selected off-screen and gets moved by surprise.
+  useEffect(() => {
+    setSelectedIds(new Set())
+    setMoveTarget("")
+    setMoveError("")
+  }, [view, year, month, filterCampaign, filterChannel, filterAssignee, filterMotion, filterProduct, filterStatus])
+
   // dialogs
   const [selectedItem, setSelectedItem] = useState<ContentItemWithCampaign | null>(null)
   const [newItemDate,  setNewItemDate]   = useState<string | null>(null)
@@ -139,6 +149,12 @@ export function ContentCalendar() {
   // drag & drop
   const dragItem  = useRef<ContentItemWithCampaign | null>(null)
   const [dragOverDate, setDragOverDate] = useState<string | null>(null)
+
+  // bulk selection (list view)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [moveTarget,  setMoveTarget]  = useState("")
+  const [moving,      setMoving]      = useState(false)
+  const [moveError,   setMoveError]   = useState("")
 
   // ── flatten all items ──────────────────────────────────────────────────────
 
@@ -238,6 +254,43 @@ export function ContentCalendar() {
 
   const openItem = (item: ContentItemWithCampaign) => setSelectedItem(item)
   const openNew  = (date: string | null) => setNewItemDate(date ?? "")
+
+  // ── bulk selection ────────────────────────────────────────────────────────
+
+  const toggleSelected = (id: string) =>
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+
+  const setManySelected = (ids: string[], on: boolean) =>
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      for (const id of ids) {
+        if (on) next.add(id)
+        else next.delete(id)
+      }
+      return next
+    })
+
+  const clearSelection = () => { setSelectedIds(new Set()); setMoveTarget(""); setMoveError("") }
+
+  const handleBulkMove = async () => {
+    if (selectedIds.size === 0) return
+    setMoving(true); setMoveError("")
+    try {
+      // "" means detach — NO_CAMPAIGN_ID is a synthetic UI id, never a real row
+      await moveContentItemsClient([...selectedIds], moveTarget || null)
+      await refreshCampaigns()
+      clearSelection()
+    } catch (e) {
+      setMoveError(e instanceof Error ? e.message : "Failed to move items")
+    } finally {
+      setMoving(false)
+    }
+  }
 
   // ── cell renderer ─────────────────────────────────────────────────────────
 
@@ -358,29 +411,56 @@ export function ContentCalendar() {
           const start = parseDateStr(dates[0])
           const end   = parseDateStr(dates[dates.length - 1])
           const done  = items.filter(i => i.status === "Published").length
+          const weekIds = items.map(i => i.id)
+          const selectedInWeek  = weekIds.filter(id => selectedIds.has(id)).length
+          const weekAllSelected  = selectedInWeek === weekIds.length && weekIds.length > 0
+          const weekSomeSelected = selectedInWeek > 0
           return (
             <div key={wi} className="rounded-2xl border border-border overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 bg-surface-container-low border-b border-border">
+              <div className="flex items-center gap-3 px-4 py-3 bg-surface-container-low border-b border-border">
+                {isEditor && (
+                  <input
+                    type="checkbox"
+                    checked={weekAllSelected}
+                    ref={el => { if (el) el.indeterminate = weekSomeSelected && !weekAllSelected }}
+                    onChange={e => setManySelected(weekIds, e.target.checked)}
+                    className="h-4 w-4 rounded border-outline-variant accent-primary cursor-pointer flex-shrink-0"
+                    aria-label={`Select all items in week ${wi + 1}`}
+                  />
+                )}
                 <span className="text-sm font-semibold text-on-surface">
                   Week {wi + 1} — {MONTHS[start.getMonth()].slice(0,3)} {start.getDate()}–{end.getDate()}
                 </span>
-                <span className="text-xs text-on-surface-variant">{done}/{items.length} published</span>
+                <span className="ml-auto text-xs text-on-surface-variant">{done}/{items.length} published</span>
               </div>
               {items.map(item => (
-                <button
+                <div
                   key={item.id}
-                  onClick={() => openItem(item)}
-                  className="w-full flex items-center gap-3 px-4 py-3 border-b border-border last:border-b-0 hover:bg-surface-container-low/60 transition-colors text-left"
+                  className="w-full flex items-center gap-3 px-4 border-b border-border last:border-b-0 hover:bg-surface-container-low/60 transition-colors"
                 >
-                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: STATUS_COLORS[item.status as ItemStatus]?.dot || "#94a3b8" }} aria-hidden="true" />
-                  <span className="text-sm font-medium text-on-surface flex-1 truncate">{item.title}</span>
-                  <span className="text-xs text-on-surface-variant flex-shrink-0">{item.publish_date ? parseDateStr(item.publish_date).toLocaleDateString("en-GB",{day:"numeric",month:"short"}) : ""}</span>
-                  <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-md flex-shrink-0 border border-outline-variant bg-surface-container-low text-on-surface-variant">
-                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: MOTION_ACCENTS[item.campaign.motion] || "#94a3b8" }} aria-hidden="true" />
-                    {item.campaign.motion}
-                  </span>
-                  <span className="text-xs text-on-surface-variant flex-shrink-0">{CHANNEL_ICONS[item.channel] || ""} {item.channel}</span>
-                </button>
+                  {isEditor && (
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(item.id)}
+                      onChange={() => toggleSelected(item.id)}
+                      className="h-4 w-4 rounded border-outline-variant accent-primary cursor-pointer flex-shrink-0"
+                      aria-label={`Select ${item.title}`}
+                    />
+                  )}
+                  <button
+                    onClick={() => openItem(item)}
+                    className="flex-1 min-w-0 flex items-center gap-3 py-3 text-left"
+                  >
+                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: STATUS_COLORS[item.status as ItemStatus]?.dot || "#94a3b8" }} aria-hidden="true" />
+                    <span className="text-sm font-medium text-on-surface flex-1 truncate">{item.title}</span>
+                    <span className="text-xs text-on-surface-variant flex-shrink-0">{item.publish_date ? parseDateStr(item.publish_date).toLocaleDateString("en-GB",{day:"numeric",month:"short"}) : ""}</span>
+                    <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-md flex-shrink-0 border border-outline-variant bg-surface-container-low text-on-surface-variant">
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: MOTION_ACCENTS[item.campaign.motion] || "#94a3b8" }} aria-hidden="true" />
+                      {item.campaign.motion}
+                    </span>
+                    <span className="text-xs text-on-surface-variant flex-shrink-0">{CHANNEL_ICONS[item.channel] || ""} {item.channel}</span>
+                  </button>
+                </div>
               ))}
             </div>
           )
@@ -553,6 +633,41 @@ export function ContentCalendar() {
       {view === "month" && renderMonthGrid()}
       {view === "week"  && renderWeekGrid()}
       {view === "list"  && renderListView()}
+
+      {/* Bulk move bar — list view only, editors only */}
+      {view === "list" && isEditor && selectedIds.size > 0 && (
+        <div className="sticky bottom-4 z-30 mx-auto w-fit max-w-full flex flex-wrap items-center gap-3 px-4 py-3 rounded-2xl border border-outline-variant bg-surface-container-high shadow-lg">
+          <span className="text-sm font-semibold text-on-surface whitespace-nowrap">
+            {selectedIds.size} selected
+          </span>
+          <select
+            value={moveTarget}
+            onChange={e => setMoveTarget(e.target.value)}
+            className="px-3 py-2 rounded-lg border border-outline-variant bg-surface-container text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            aria-label="Destination campaign"
+          >
+            <option value="">No campaign</option>
+            {campaigns.filter(c => c.id !== NO_CAMPAIGN_ID).map(c => (
+              <option key={c.id} value={c.id}>{c.title}</option>
+            ))}
+          </select>
+          <button
+            onClick={handleBulkMove}
+            disabled={moving}
+            className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors whitespace-nowrap"
+          >
+            {moving ? "Moving…" : "Move"}
+          </button>
+          <button
+            onClick={clearSelection}
+            disabled={moving}
+            className="px-3 py-2 rounded-lg text-sm font-semibold text-on-surface-variant hover:bg-surface-container-highest disabled:opacity-50 transition-colors"
+          >
+            Clear
+          </button>
+          {moveError && <span className="text-xs text-red-600 font-medium w-full">{moveError}</span>}
+        </div>
+      )}
 
       {/* Stats row */}
       {(() => {
