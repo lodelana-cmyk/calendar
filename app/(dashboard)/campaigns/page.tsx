@@ -13,7 +13,12 @@ import { MOTION_OPTIONS, MOTION_ACCENTS, NO_CAMPAIGN_ID } from "@/lib/database.t
 export default function CampaignsPage() {
   const { campaigns: allCampaigns, isLoading } = useStore()
   const campaigns = allCampaigns.filter(c => c.id !== NO_CAMPAIGN_ID)
-  const [selected,       setSelected]       = useState<CampaignWithItems | null>(null)
+  const [selectedId,     setSelectedId]     = useState<string | null>(null)
+  // Derived live from the store (not a frozen snapshot) so the sheet reflects
+  // changes made inside it — editing an item, or moving items out of it.
+  const selected: CampaignWithItems | null = selectedId
+    ? campaigns.find(c => c.id === selectedId) ?? null
+    : null
   const [createOpen,     setCreateOpen]     = useState(false)
   const [search,         setSearch]         = useState("")
   const [filterMotion,   setFilterMotion]   = useState("All")
@@ -115,7 +120,7 @@ export default function CampaignsPage() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {group.map(c => (
-                    <CampaignCard key={c.id} campaign={c} onClick={() => setSelected(c)} />
+                    <CampaignCard key={c.id} campaign={c} onClick={() => setSelectedId(c.id)} />
                   ))}
                 </div>
               </section>
@@ -125,7 +130,7 @@ export default function CampaignsPage() {
       )}
 
       {selected && (
-        <CampaignDetailSheet campaign={selected} onClose={() => setSelected(null)} />
+        <CampaignDetailSheet campaign={selected} onClose={() => setSelectedId(null)} />
       )}
       <CreateCampaignDialog open={createOpen} onOpenChange={setCreateOpen} />
     </div>
