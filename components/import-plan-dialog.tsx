@@ -11,32 +11,13 @@ import {
 import { useStore } from "@/lib/store"
 import { useRefreshData } from "@/components/data-provider"
 import { createCampaignClient, createContentItemsClient } from "@/lib/data-client"
+import { normaliseFormat, normaliseChannel, matchAssignee as matchAssigneeToProfiles, nextSortOrder } from "@/lib/ai-items"
 import type {
-  CampaignMotion, CampaignType, ItemStatus, ContentChannel, ContentFormat, DateConfidence, CampaignWithItems,
+  CampaignMotion, CampaignType, ItemStatus, DateConfidence, CampaignWithItems,
 } from "@/lib/database.types"
 import {
-  MOTION_OPTIONS, TYPE_OPTIONS, ICON_COLORS, FORMAT_OPTIONS, CHANNEL_OPTIONS, NO_CAMPAIGN_ID,
+  MOTION_OPTIONS, TYPE_OPTIONS, ICON_COLORS, NO_CAMPAIGN_ID,
 } from "@/lib/database.types"
-
-/** Clamp AI-returned format to the valid DB enum, defaulting to "Other". */
-function normaliseFormat(raw: string): ContentFormat {
-  return (FORMAT_OPTIONS as readonly string[]).includes(raw)
-    ? (raw as ContentFormat)
-    : "Other"
-}
-
-/** Clamp AI-returned channel to the valid DB enum, defaulting to "Other". */
-function normaliseChannel(raw: string): ContentChannel {
-  return (CHANNEL_OPTIONS as readonly string[]).includes(raw)
-    ? (raw as ContentChannel)
-    : "Other"
-}
-
-/** Next sort_order to append after an existing campaign's current items. */
-function nextSortOrder(existing: CampaignWithItems | undefined): number {
-  if (!existing || existing.items.length === 0) return 0
-  return existing.items.reduce((max, it) => Math.max(max, it.sort_order + 1), 0)
-}
 
 const NO_SECTION = "__no_section__"
 
@@ -177,15 +158,7 @@ export function ImportPlanDialog({ open, onOpenChange, calendarYear, calendarMon
     }
   }
 
-  /** Match a first name to a profile id */
-  const matchAssignee = (name: string | null): string | null => {
-    if (!name) return null
-    const lower = name.toLowerCase().trim()
-    return profiles.find(p =>
-      p.full_name.toLowerCase().startsWith(lower) ||
-      p.full_name.toLowerCase().split(" ")[0] === lower
-    )?.id || null
-  }
+  const matchAssignee = (name: string | null): string | null => matchAssigneeToProfiles(name, profiles)
 
   const handleApply = async () => {
     setIsApplying(true); setError("")

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { X, Plus, ExternalLink, Trash2 } from "lucide-react"
+import { X, Plus, ExternalLink, Trash2, Sparkles } from "lucide-react"
 import { useStore, useIsEditor } from "@/lib/store"
 import { useRefreshData } from "@/components/data-provider"
 import { updateCampaignClient, deleteCampaignClient, createContentItemClient, moveContentItemsClient } from "@/lib/data-client"
@@ -11,6 +11,7 @@ import {
   CHANNEL_ICONS, STATUS_COLORS, NO_CAMPAIGN_ID
 } from "@/lib/database.types"
 import { ContentItemDialog } from "@/components/content-item-dialog"
+import { GenerateItemsDialog } from "@/components/generate-items-dialog"
 
 interface Props {
   campaign: CampaignWithItems
@@ -30,6 +31,7 @@ export function CampaignDetailSheet({ campaign, onClose }: Props) {
   const [saving,    setSaving]    = useState(false)
   const [selectedItem, setSelectedItem] = useState<ContentItemWithCampaign | null>(null)
   const [newItemOpen,  setNewItemOpen]  = useState(false)
+  const [generateOpen, setGenerateOpen] = useState(false)
   const [confirmDel,   setConfirmDel]   = useState(false)
 
   // Bulk move
@@ -197,12 +199,22 @@ export function CampaignDetailSheet({ campaign, onClose }: Props) {
                 )}
                 <h3 className="text-sm font-bold text-on-surface">Content Items ({items.length})</h3>
               </div>
-              <button
-                onClick={() => setNewItemOpen(true)}
-                className="flex items-center gap-1.5 text-xs text-primary font-semibold hover:underline"
-              >
-                <Plus className="h-3.5 w-3.5" /> Add item
-              </button>
+              {isEditor && (
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setGenerateOpen(true)}
+                    className="flex items-center gap-1.5 text-xs text-primary font-semibold hover:underline"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" /> Generate with AI
+                  </button>
+                  <button
+                    onClick={() => setNewItemOpen(true)}
+                    className="flex items-center gap-1.5 text-xs text-primary font-semibold hover:underline"
+                  >
+                    <Plus className="h-3.5 w-3.5" /> Add item
+                  </button>
+                </div>
+              )}
             </div>
 
             {items.length === 0 ? (
@@ -310,6 +322,13 @@ export function CampaignDetailSheet({ campaign, onClose }: Props) {
           defaultCampaignId={campaign.id}
           open={newItemOpen}
           onOpenChange={open => { if (!open) setNewItemOpen(false) }}
+        />
+      )}
+      {generateOpen && (
+        <GenerateItemsDialog
+          open={generateOpen}
+          onOpenChange={setGenerateOpen}
+          campaign={campaign}
         />
       )}
     </>
