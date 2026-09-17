@@ -52,6 +52,9 @@ const campaignSchema = z.object({
 // not just by prompt instruction.
 const singlePlanSchema = z.object({ campaign: campaignSchema })
 const multiPlanSchema = z.object({ campaigns: z.array(campaignSchema) })
+// Mode "items": draft items for a campaign that already exists — no
+// campaign object needed, just the items array.
+const itemsOnlySchema = z.object({ items: z.array(itemSchema) })
 
 export async function POST(req: Request) {
   // Require an authenticated user
@@ -63,11 +66,73 @@ export async function POST(req: Request) {
     return Response.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const { text, monthContext, mode: rawMode, campaignTitle } = await req.json()
-  const mode: "single" | "auto" = rawMode === "auto" ? "auto" : "single"
+  const {
+    text, monthContext, mode: rawMode, campaignTitle,
+    campaignType, campaignMotion, campaignProduct,
+    channels, startDate, endDate, existingTitles, count,
+  } = await req.json()
+
+  const mode: "single" | "auto" | "items" =
+    rawMode === "auto" ? "auto" : rawMode === "items" ? "items" : "single"
 
   if (!text || typeof text !== "string" || text.trim().length < 10) {
-    return Response.json({ error: "Paste the content plan text first." }, { status: 400 })
+    return Response.json(
+      {
+        error: mode === "items"
+          ? "Describe what this campaign should cover first."
+          : "Paste the content plan text first.",
+      },
+      { status: 400 },
+    )
+  }
+
+  // ── Mode "items": draft items for an EXISTING campaign — no campaign object,
+  //    just an items array constrained to the channels/dates given. ──
+  if (mode === "items") {
+    const channelList = (Array.isArray(channels) ? channels : []).filter(
+      (c: unknown): c is string => typeof c === "string" && c.length > 0,
+    )
+    if (channelList.length === 0) {
+      return Response.json({ error: "Pick at least one channel." }, { status: 400 })
+    }
+    const existingList = (Array.isArray(existingTitles) ? existingTitles : [])
+      .filter((t: unknown): t is string => typeof t === "string" && t.length > 0)
+      .slice(0, 50)
+    const targetCount = Number.isFinite(count) && count > 0 ? Math.min(Math.round(count), 40) : 10
+
+    const itemsPrompt = `You are drafting content items for an EXISTING marketing campaign on a content calendar. Do not invent a new campaign or restate its details — only produce the items array.
+
+Campaign: "${campaignTitle || "Untitled campaign"}"${campaignType ? `\nType: ${campaignType}` : ""}${campaignMotion ? `\nMotion: ${campaignMotion}` : ""}${campaignProduct ? `\nProduct: ${campaignProduct}` : ""}
+
+Intended outcomes for this campaign:
+"""
+${text.slice(0, 4000)}
+"""
+
+Rules:
+- Produce approximately ${targetCount} items.
+- Only use these channels, spelled exactly as given: ${channelList.join(", ")}. Do not use any other channel.
+- Spread publish_date across ${startDate} through ${endDate} inclusive. Prefer weekdays (Mon-Fri), but a weekend date in this range is acceptable if it fits the plan better.
+- Do NOT repeat or closely rephrase any of these titles, which already exist in this campaign:
+${existingList.length > 0 ? existingList.map((t: string) => `- ${t}`).join("\n") : "(none yet)"}
+- assignee_name should be a first name only if the outcomes text names someone responsible; otherwise null.
+- Every item's date_confidence should be "Provisional" — none of these dates are confirmed yet.
+- Keep titles concise and actionable. Vary the items so they don't all sound the same.`
+
+    try {
+      const { output } = await generateText({
+        model: "openai/gpt-5.4-mini",
+        output: Output.object({ schema: itemsOnlySchema }),
+        prompt: itemsPrompt,
+      })
+      return Response.json({ items: output.items })
+    } catch (error) {
+      console.error("Generate items error:", error)
+      return Response.json(
+        { error: error instanceof Error ? error.message : "Failed to generate items" },
+        { status: 500 },
+      )
+    }
   }
 
   const groupingRules =
