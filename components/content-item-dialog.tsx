@@ -85,8 +85,10 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
   )
   const [contributors, setContribs]   = useState<Contributor[]>((item as any)?.contributors ?? [])
   const [saving, setSaving]           = useState(false)
+  const [error, setError]             = useState("")
   const [confirmDel, setConfirmDel]   = useState(false)
   const [activeTab, setActiveTab]     = useState<"details" | "comments">("details")
+  const titleInputRef                 = useRef<HTMLInputElement>(null)
 
   // Comments
   const [comments, setComments]         = useState<ItemComment[]>([])
@@ -116,7 +118,12 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
     setForm(prev => ({ ...prev, [key]: val }))
 
   const handleSave = async () => {
-    if (!form.title.trim()) return
+    if (!form.title.trim()) {
+      setError("Title is required")
+      titleInputRef.current?.focus()
+      return
+    }
+    setError("")
     setSaving(true)
     try {
       if (isNew) {
@@ -155,6 +162,8 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
       }
       await refreshCampaigns()
       handleClose()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to save item")
     } finally {
       setSaving(false)
     }
@@ -211,13 +220,17 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
                 </p>
               )}
               {isEditor ? (
-                <input
-                  autoFocus
-                  value={form.title}
-                  onChange={e => f("title", e.target.value)}
-                  placeholder="Content item title"
-                  className="w-full bg-transparent text-base font-bold text-on-surface border-none outline-none placeholder:text-muted-foreground"
-                />
+                <div className="flex flex-col gap-1">
+                  <FieldLabel>Title *</FieldLabel>
+                  <input
+                    ref={titleInputRef}
+                    autoFocus
+                    value={form.title}
+                    onChange={e => { f("title", e.target.value); if (error) setError("") }}
+                    placeholder="Content item title"
+                    className={selectCls()}
+                  />
+                </div>
               ) : (
                 <h2 className="text-base font-bold text-on-surface">{form.title}</h2>
               )}
@@ -505,22 +518,25 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
 
           {/* Footer (details tab only) */}
           {activeTab === "details" && isEditor && (
-            <div className="flex justify-between items-center px-5 py-4 border-t border-border flex-shrink-0">
-              {!isNew ? (
-                <button onClick={() => setConfirmDel(true)}
-                  className="flex items-center gap-1.5 text-sm font-semibold text-red-500 hover:text-red-600 transition-colors">
-                  <Trash2 className="h-3.5 w-3.5" /> Delete
-                </button>
-              ) : <div />}
-              <div className="flex gap-2">
-                <button onClick={handleClose}
-                  className="px-3 py-2 rounded-lg text-sm font-semibold border border-outline-variant hover:bg-surface-container-high transition-colors">
-                  Cancel
-                </button>
-                <button onClick={handleSave} disabled={saving || !form.title.trim()}
-                  className="px-4 py-2 rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-60 transition-colors">
-                  {saving ? "Saving…" : isNew ? "Create" : "Save changes"}
-                </button>
+            <div className="flex flex-col gap-2 px-5 py-4 border-t border-border flex-shrink-0">
+              {error && <p className="text-xs text-red-600 font-medium">{error}</p>}
+              <div className="flex justify-between items-center">
+                {!isNew ? (
+                  <button onClick={() => setConfirmDel(true)}
+                    className="flex items-center gap-1.5 text-sm font-semibold text-red-500 hover:text-red-600 transition-colors">
+                    <Trash2 className="h-3.5 w-3.5" /> Delete
+                  </button>
+                ) : <div />}
+                <div className="flex gap-2">
+                  <button onClick={handleClose}
+                    className="px-3 py-2 rounded-lg text-sm font-semibold border border-outline-variant hover:bg-surface-container-high transition-colors">
+                    Cancel
+                  </button>
+                  <button onClick={handleSave} disabled={saving}
+                    className="px-4 py-2 rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-60 transition-colors">
+                    {saving ? "Saving…" : isNew ? "Create" : "Save changes"}
+                  </button>
+                </div>
               </div>
             </div>
           )}
