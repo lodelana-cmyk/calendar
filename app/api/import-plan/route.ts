@@ -5,6 +5,12 @@ import { PRODUCT_OPTIONS } from "@/lib/database.types"
 
 export const maxDuration = 60
 
+// Vercel AI Gateway model slug. Defaults to a free-tier model so this route
+// works with zero configuration; override in Vercel's project env vars (then
+// redeploy) to use a paid/BYOK model instead — no code change needed either
+// way. See the free-tier model list: vercel.com/ai-gateway/models?freeTier=true
+const MODEL = process.env.AI_GATEWAY_MODEL || "inclusionai/ling-3.0-flash-fin"
+
 const itemSchema = z.object({
   title: z.string().describe("The content item title, short and actionable"),
   format: z
@@ -121,7 +127,7 @@ ${existingList.length > 0 ? existingList.map((t: string) => `- ${t}`).join("\n")
 
     try {
       const { output } = await generateText({
-        model: "openai/gpt-5.4-mini",
+        model: MODEL,
         output: Output.object({ schema: itemsOnlySchema }),
         prompt: itemsPrompt,
       })
@@ -169,7 +175,7 @@ ${text.slice(0, 12000)}
     // can't unify.
     if (mode === "single") {
       const { output } = await generateText({
-        model: "openai/gpt-5.4-mini",
+        model: MODEL,
         output: Output.object({ schema: singlePlanSchema }),
         prompt,
       })
@@ -177,7 +183,7 @@ ${text.slice(0, 12000)}
     }
 
     const { output } = await generateText({
-      model: "openai/gpt-5.4-mini",
+      model: MODEL,
       output: Output.object({ schema: multiPlanSchema }),
       prompt,
     })
