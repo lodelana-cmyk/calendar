@@ -62,6 +62,39 @@ const multiPlanSchema = z.object({ campaigns: z.array(campaignSchema) })
 // campaign object needed, just the items array.
 const itemsOnlySchema = z.object({ items: z.array(itemSchema) })
 
+/**
+ * The free-tier model is inconsistent: at default sampling settings it
+ * occasionally injects garbled tokens into fields (verified empirically —
+ * temperature 0 eliminated this in testing) and occasionally returns
+ * truncated output that fails schema validation entirely. temperature: 0
+ * makes output deterministic-ish and far more schema-compliant; the retry
+ * loop absorbs the rarer outright failures a free model still produces.
+ * Both are essentially free (no extra cost on a $0/token model, and each
+ * retry is only a few seconds against the maxDuration=60 budget).
+ */
+async function generateStructured<Schema extends z.ZodTypeAny>(
+  schema: Schema,
+  prompt: string,
+  attempts = 3,
+): Promise<z.infer<Schema>> {
+  let lastError: unknown
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      const { output } = await generateText({
+        model: MODEL,
+        temperature: 0,
+        output: Output.object({ schema }),
+        prompt,
+      })
+      return output
+    } catch (error) {
+      lastError = error
+      console.error(`generateStructured attempt ${attempt}/${attempts} failed:`, error)
+    }
+  }
+  throw lastError
+}
+
 export async function POST(req: Request) {
   // Require an authenticated user
   const supabase = await createClient()
@@ -126,11 +159,7 @@ ${existingList.length > 0 ? existingList.map((t: string) => `- ${t}`).join("\n")
 - Keep titles concise and actionable. Vary the items so they don't all sound the same.`
 
     try {
-      const { output } = await generateText({
-        model: MODEL,
-        output: Output.object({ schema: itemsOnlySchema }),
-        prompt: itemsPrompt,
-      })
+      const output = await generateStructured(itemsOnlySchema, itemsPrompt)
       return Response.json({ items: output.items })
     } catch (error) {
       console.error("Generate items error:", error)
@@ -170,23 +199,15 @@ ${text.slice(0, 12000)}
 """`
 
   try {
-    // Branched (rather than a ternary on `schema`) so each generateText call
-    // keeps its own concrete schema type instead of a union the SDK's types
-    // can't unify.
+    // Branched (rather than a ternary on `schema`) so each generateStructured
+    // call keeps its own concrete schema type instead of a union the SDK's
+    // types can't unify.
     if (mode === "single") {
-      const { output } = await generateText({
-        model: MODEL,
-        output: Output.object({ schema: singlePlanSchema }),
-        prompt,
-      })
+      const output = await generateStructured(singlePlanSchema, prompt)
       return Response.json({ plan: { campaigns: [output.campaign] } })
     }
 
-    const { output } = await generateText({
-      model: MODEL,
-      output: Output.object({ schema: multiPlanSchema }),
-      prompt,
-    })
+    const output = await generateStructured(multiPlanSchema, prompt)
     return Response.json({ plan: output })
   } catch (error) {
     console.error("Import plan parse error:", error)
