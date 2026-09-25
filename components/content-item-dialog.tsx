@@ -8,6 +8,7 @@ import {
   getItemCommentsClient, addItemCommentClient, deleteItemCommentClient,
 } from "@/lib/data-client"
 import { useRefreshData } from "@/components/data-provider"
+import { CreateCampaignDialog } from "@/components/create-campaign-dialog"
 import type {
   ContentItemWithCampaign, ItemStatus, ContentChannel, ContentFormat,
   DateConfidence, ItemComment, Contributor, ContributorRole,
@@ -16,6 +17,8 @@ import {
   MOTION_ACCENTS, STATUS_COLORS, STATUS_OPTIONS, CHANNEL_OPTIONS, FORMAT_OPTIONS, CONTRIBUTOR_ROLE_OPTIONS,
   NO_CAMPAIGN_ID,
 } from "@/lib/database.types"
+
+const NEW_CAMPAIGN_OPTION = "__new_campaign__"
 
 interface Props {
   item: ContentItemWithCampaign | null
@@ -87,6 +90,7 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
   const [saving, setSaving]           = useState(false)
   const [error, setError]             = useState("")
   const [confirmDel, setConfirmDel]   = useState(false)
+  const [newCampaignOpen, setNewCampaignOpen] = useState(false)
   const [activeTab, setActiveTab]     = useState<"details" | "comments">("details")
   const titleInputRef                 = useRef<HTMLInputElement>(null)
 
@@ -276,9 +280,17 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
               <div className="flex flex-col gap-1.5">
                 <FieldLabel>Campaign</FieldLabel>
                 {isEditor ? (
-                  <select value={campaignId} onChange={e => setCampaignId(e.target.value)} className={selectCls()}>
+                  <select
+                    value={campaignId}
+                    onChange={e => {
+                      if (e.target.value === NEW_CAMPAIGN_OPTION) setNewCampaignOpen(true)
+                      else setCampaignId(e.target.value)
+                    }}
+                    className={selectCls()}
+                  >
                     <option value="">No campaign</option>
                     {realCampaigns.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                    <option value={NEW_CAMPAIGN_OPTION}>+ New campaign…</option>
                   </select>
                 ) : (
                   <p className="text-sm text-on-surface px-3 py-2">
@@ -561,6 +573,19 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
             </div>
           </div>
         </div>
+      )}
+
+      {newCampaignOpen && (
+        <CreateCampaignDialog
+          stacked
+          open={newCampaignOpen}
+          onOpenChange={setNewCampaignOpen}
+          onCreated={async campaign => {
+            // Refresh before selecting, or the new id has no <option> yet
+            await refreshCampaigns()
+            setCampaignId(campaign.id)
+          }}
+        />
       )}
     </>
   )

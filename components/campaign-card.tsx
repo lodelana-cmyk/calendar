@@ -94,11 +94,15 @@ export function CampaignCard({ campaign, onClick }: Props) {
         </div>
       </div>
 
-      {/* Date range */}
-      {startDate && (
+      {/* Dates: target completion date if set, otherwise the span of item dates */}
+      {(campaign.end_date || startDate) && (
         <div className="flex items-center gap-1.5 text-xs text-on-surface-variant">
           <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
-          <span>{fmtDate(startDate)}{endDate !== startDate ? ` – ${fmtDate(endDate)}` : ""}</span>
+          {campaign.end_date ? (
+            <span className="font-semibold text-on-surface">Due {fmtDate(campaign.end_date)}</span>
+          ) : (
+            <span>{fmtDate(startDate)}{endDate !== startDate ? ` – ${fmtDate(endDate)}` : ""}</span>
+          )}
         </div>
       )}
     </button>
