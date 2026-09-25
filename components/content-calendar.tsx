@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import {
   ChevronLeft, ChevronRight, Plus, CalendarDays, List,
   Sparkles, Download, Columns, SlidersHorizontal
@@ -158,6 +159,28 @@ export function ContentCalendar() {
     campaigns.flatMap(c =>
       (c.items || []).map(item => ({ ...item, campaign: c }))
     ), [campaigns])
+
+  // ── deep link: /?item=<id> (from a notification) opens that item ─────────
+
+  const itemParam = useSearchParams().get("item")
+  const openedForRef    = useRef<string | null>(null)
+  const refreshedForRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (!itemParam || openedForRef.current === itemParam) return
+    const found = allItems.find(i => i.id === itemParam)
+    if (found) {
+      openedForRef.current = itemParam
+      setSelectedItem(found)
+      const p = new URLSearchParams(window.location.search)
+      p.delete("item")
+      const qs = p.toString()
+      window.history.replaceState(null, "", qs ? `?${qs}` : window.location.pathname)
+    } else if (refreshedForRef.current !== itemParam) {
+      // Probably created by a teammate since this page loaded — fetch once.
+      refreshedForRef.current = itemParam
+      refreshCampaigns()
+    }
+  }, [itemParam, allItems]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── apply filters ──────────────────────────────────────────────────────────
 

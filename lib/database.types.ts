@@ -120,6 +120,23 @@ export interface ItemComment {
   author?: Profile | null
 }
 
+// ---- Notifications ----
+export type NotificationType = "mention" | "new_content"
+
+export interface AppNotification {
+  id: string
+  recipient_id: string
+  actor_id: string | null
+  type: NotificationType
+  item_id: string | null
+  comment_id: string | null
+  body_preview: string | null
+  read_at: string | null
+  created_at: string
+  /** Embedded so the bell can title and route the notification */
+  item?: { id: string; title: string; campaign_id: string | null; status: string } | null
+}
+
 // ---- Profiles ----
 export interface Profile {
   id: string
