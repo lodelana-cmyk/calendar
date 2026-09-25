@@ -94,6 +94,8 @@ export interface ContentItem {
   date_confidence: DateConfidence
   content_role: string | null
   contributors: Contributor[]
+  /** Target audiences — values from AUDIENCE_SEGMENTS */
+  audience_segments: string[]
   notes: string | null
   brief_url: string | null
   live_url: string | null
@@ -116,6 +118,23 @@ export interface ItemComment {
   body: string
   created_at: string
   author?: Profile | null
+}
+
+// ---- Notifications ----
+export type NotificationType = "mention" | "new_content"
+
+export interface AppNotification {
+  id: string
+  recipient_id: string
+  actor_id: string | null
+  type: NotificationType
+  item_id: string | null
+  comment_id: string | null
+  body_preview: string | null
+  read_at: string | null
+  created_at: string
+  /** Embedded so the bell can title and route the notification */
+  item?: { id: string; title: string; campaign_id: string | null; status: string } | null
 }
 
 // ---- Profiles ----
@@ -212,6 +231,13 @@ export const STATUS_OPTIONS: ItemStatus[] = [
 
 export const CONTRIBUTOR_ROLE_OPTIONS: ContributorRole[] = ["Writer", "Designer", "Video", "Reviewer"]
 
+/** Audience tags for content items, grouped for display. Add values here freely — the DB column has no CHECK. */
+export const AUDIENCE_SEGMENT_GROUPS: { label: string; segments: string[] }[] = [
+  { label: "Lifecycle stage",     segments: ["Onboarding", "Product adoption", "Upsell", "Retention", "Win-back"] },
+  { label: "Subscription status", segments: ["Trial", "Free", "Paid", "Churned"] },
+]
+export const AUDIENCE_SEGMENTS: string[] = AUDIENCE_SEGMENT_GROUPS.flatMap(g => g.segments)
+
 export const ROLE_OPTIONS = ["Editor", "Videographer", "Designer", "Copywriter", "Strategist", "Producer", "Other"]
 
 export const PRODUCT_OPTIONS = [
@@ -254,6 +280,22 @@ export const ICON_COLORS = [
   "bg-amber-500",  "bg-cyan-500",    "bg-teal-500", "bg-blue-500",
   "bg-orange-500", "bg-pink-500",    "bg-slate-600",
 ]
+
+// Calendar colour per campaign. Derived from the id rather than the stored
+// icon_color, which is a Tailwind class that most campaigns leave at the
+// same default — so it can't tell campaigns apart.
+const CAMPAIGN_PALETTE = [
+  "#6366f1", "#10b981", "#f43f5e", "#f59e0b", "#0ea5e9",
+  "#8b5cf6", "#14b8a6", "#ec4899", "#84cc16", "#f97316",
+]
+const NO_CAMPAIGN_COLOR = "#94a3b8"
+
+export function campaignColor(campaignId: string | null | undefined): string {
+  if (!campaignId || campaignId === NO_CAMPAIGN_ID) return NO_CAMPAIGN_COLOR
+  let hash = 0
+  for (let i = 0; i < campaignId.length; i++) hash = (hash * 31 + campaignId.charCodeAt(i)) | 0
+  return CAMPAIGN_PALETTE[Math.abs(hash) % CAMPAIGN_PALETTE.length]
+}
 
 export function parseDateString(dateStr: string): Date {
   const [y, m, d] = dateStr.split("-").map(Number)

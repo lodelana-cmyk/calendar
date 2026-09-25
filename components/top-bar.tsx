@@ -3,6 +3,7 @@
 import { Search, Menu } from "lucide-react"
 import { useStore } from "@/lib/store"
 import { useState } from "react"
+import { NotificationBell } from "@/components/notification-bell"
 
 export function TopBar({ onMenuClick }: { onMenuClick?: () => void }) {
   const { filters, setFilters } = useStore()
@@ -14,7 +15,7 @@ export function TopBar({ onMenuClick }: { onMenuClick?: () => void }) {
   }
 
   return (
-    <header className="w-full h-16 sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b border-border/30 flex items-center gap-4 px-6">
+    <header className="w-full h-12 sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b border-border/30 flex items-center gap-4 px-6">
       <button
         onClick={onMenuClick}
         className="lg:hidden h-9 w-9 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
@@ -32,6 +33,10 @@ export function TopBar({ onMenuClick }: { onMenuClick?: () => void }) {
           placeholder="Search campaigns and content…"
           className="pl-9 pr-4 py-2 bg-surface-container border border-outline-variant rounded-lg w-full text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-shadow"
         />
+      </div>
+
+      <div className="ml-auto">
+        <NotificationBell />
       </div>
     </header>
   )

@@ -99,6 +99,7 @@ export async function getCampaignsWithItems(): Promise<CampaignWithItems[]> {
       campaignType: parent.type,
       campaignProduct: parent.product ?? null,
       contributors: item.contributors ?? [],
+      audience_segments: item.audience_segments ?? [],
       assignee: item.assignee_id ? (profileMap[item.assignee_id] ?? null) : null,
     }
     parent.items.push(enriched)

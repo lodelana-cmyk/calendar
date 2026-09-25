@@ -1,6 +1,6 @@
 "use client"
 
-import { CalendarDays, Inbox, Megaphone, Users, Settings, LogOut, User } from "lucide-react"
+import { CalendarDays, Inbox, Megaphone, Users, Settings, LogOut, User, Library } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
@@ -12,6 +12,7 @@ const navItems = [
   { icon: Inbox,        label: "Inbox",     href: "/inbox" },
   { icon: CalendarDays, label: "Calendar",  href: "/" },
   { icon: Megaphone,    label: "Campaigns", href: "/campaigns" },
+  { icon: Library,      label: "Library",   href: "/library" },
   { icon: Users,        label: "Team",      href: "/team" },
 ]
 

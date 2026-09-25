@@ -39,12 +39,20 @@ function toISO(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
 }
 
-/** The campaign's own date range if it has one, else today through 4 weeks out. */
+/**
+ * Items are scheduled up to the campaign's completion date when it has one
+ * (from its start date, or today), else today through 4 weeks out.
+ */
 function dateWindow(campaign: CampaignWithItems): { start: string; end: string } {
+  const today = new Date()
+  const todayISO = toISO(today)
+  if (campaign.end_date && campaign.end_date >= todayISO) {
+    const start = campaign.start_date && campaign.start_date > todayISO ? campaign.start_date : todayISO
+    return { start, end: campaign.end_date }
+  }
   if (campaign.start_date && campaign.end_date) {
     return { start: campaign.start_date, end: campaign.end_date }
   }
-  const today = new Date()
   const end = new Date(today)
   end.setDate(end.getDate() + 28)
   return { start: toISO(today), end: toISO(end) }

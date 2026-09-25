@@ -1,21 +1,26 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { X, ExternalLink, Trash2, Send, MessageCircle } from "lucide-react"
+import { X, ExternalLink, Trash2, MessageCircle } from "lucide-react"
 import { useStore, useIsEditor } from "@/lib/store"
 import {
-  updateContentItemClient, deleteContentItemClient, createContentItemClient,
+  updateContentItemClient, deleteContentItemClient, createContentItemClient, notifyTeamClient,
   getItemCommentsClient, addItemCommentClient, deleteItemCommentClient,
 } from "@/lib/data-client"
 import { useRefreshData } from "@/components/data-provider"
+import { CreateCampaignDialog } from "@/components/create-campaign-dialog"
+import { MentionInput } from "@/components/mention-input"
+import { parseMentions } from "@/lib/mentions"
 import type {
   ContentItemWithCampaign, ItemStatus, ContentChannel, ContentFormat,
   DateConfidence, ItemComment, Contributor, ContributorRole,
 } from "@/lib/database.types"
 import {
   MOTION_ACCENTS, STATUS_COLORS, STATUS_OPTIONS, CHANNEL_OPTIONS, FORMAT_OPTIONS, CONTRIBUTOR_ROLE_OPTIONS,
-  NO_CAMPAIGN_ID,
+  NO_CAMPAIGN_ID, AUDIENCE_SEGMENT_GROUPS,
 } from "@/lib/database.types"
+
+const NEW_CAMPAIGN_OPTION = "__new_campaign__"
 
 interface Props {
   item: ContentItemWithCampaign | null
@@ -84,17 +89,19 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
     item ? (item.campaign_id ?? "") : (defaultCampaignId || realCampaigns[0]?.id || "")
   )
   const [contributors, setContribs]   = useState<Contributor[]>((item as any)?.contributors ?? [])
+  const [segments, setSegments]       = useState<string[]>(item?.audience_segments ?? [])
   const [saving, setSaving]           = useState(false)
   const [error, setError]             = useState("")
   const [confirmDel, setConfirmDel]   = useState(false)
+  const [newCampaignOpen, setNewCampaignOpen] = useState(false)
+  const [notifyTeam, setNotifyTeam]   = useState(false)
   const [activeTab, setActiveTab]     = useState<"details" | "comments">("details")
   const titleInputRef                 = useRef<HTMLInputElement>(null)
 
   // Comments
   const [comments, setComments]         = useState<ItemComment[]>([])
-  const [commentBody, setCommentBody]   = useState("")
   const [loadingComments, setLoading]   = useState(false)
-  const [postingComment, setPosting]    = useState(false)
+  const [commentError, setCommentError] = useState("")
   const commentsEndRef                  = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -117,6 +124,11 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
   const f = <K extends keyof typeof form>(key: K, val: typeof form[K]) =>
     setForm(prev => ({ ...prev, [key]: val }))
 
+  // Only send segments when they changed, so saves keep working even before
+  // the audience_segments column migration (scripts/008) has been run.
+  const segmentsChanged =
+    [...segments].sort().join("|") !== [...(item?.audience_segments ?? [])].sort().join("|")
+
   const handleSave = async () => {
     if (!form.title.trim()) {
       setError("Title is required")
@@ -127,7 +139,7 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
     setSaving(true)
     try {
       if (isNew) {
-        await createContentItemClient({
+        const created = await createContentItemClient({
           campaign_id: campaignId || null,
           title: form.title.trim(),
           status: form.status,
@@ -141,8 +153,13 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
           brief_url: form.brief_url || null,
           live_url: form.live_url || null,
           contributors,
+          ...(segments.length > 0 ? { audience_segments: segments } : {}),
           sort_order: 0,
         })
+        if (notifyTeam) {
+          // The item is already saved; don't block on the notification.
+          try { await notifyTeamClient(created.id) } catch (e) { console.error("notify_team failed:", e) }
+        }
       } else {
         await updateContentItemClient(item!.id, {
           campaign_id: campaignId || null,
@@ -158,6 +175,7 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
           brief_url: form.brief_url || null,
           live_url: form.live_url || null,
           contributors,
+          ...(segmentsChanged ? { audience_segments: segments } : {}),
         })
       }
       await refreshCampaigns()
@@ -175,17 +193,16 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
     handleClose()
   }
 
-  const handlePostComment = async () => {
-    if (!commentBody.trim() || !item) return
-    setPosting(true)
+  // Rethrows so MentionInput keeps the text for a retry.
+  const handlePostComment = async (body: string) => {
+    if (!item) return
+    setCommentError("")
     try {
-      const c = await addItemCommentClient(item.id, commentBody.trim())
+      const c = await addItemCommentClient(item.id, body)
       setComments(prev => [...prev, c])
-      setCommentBody("")
     } catch (e) {
-      console.error(e)
-    } finally {
-      setPosting(false)
+      setCommentError(e instanceof Error ? e.message : "Failed to post comment")
+      throw e
     }
   }
 
@@ -276,9 +293,17 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
               <div className="flex flex-col gap-1.5">
                 <FieldLabel>Campaign</FieldLabel>
                 {isEditor ? (
-                  <select value={campaignId} onChange={e => setCampaignId(e.target.value)} className={selectCls()}>
+                  <select
+                    value={campaignId}
+                    onChange={e => {
+                      if (e.target.value === NEW_CAMPAIGN_OPTION) setNewCampaignOpen(true)
+                      else setCampaignId(e.target.value)
+                    }}
+                    className={selectCls()}
+                  >
                     <option value="">No campaign</option>
                     {realCampaigns.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                    <option value={NEW_CAMPAIGN_OPTION}>+ New campaign…</option>
                   </select>
                 ) : (
                   <p className="text-sm text-on-surface px-3 py-2">
@@ -400,6 +425,40 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
                 ))}
               </div>
 
+              {/* Audience segments */}
+              <div className="flex flex-col gap-2">
+                <FieldLabel>Audience</FieldLabel>
+                {AUDIENCE_SEGMENT_GROUPS.map(group => (
+                  <div key={group.label} className="flex flex-col gap-1.5">
+                    <span className="text-[11px] text-on-surface-variant">{group.label}</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {group.segments.map(seg => {
+                        const on = segments.includes(seg)
+                        if (!isEditor && !on) return null
+                        return (
+                          <button
+                            key={seg}
+                            type="button"
+                            disabled={!isEditor}
+                            onClick={() => setSegments(prev => on ? prev.filter(x => x !== seg) : [...prev, seg])}
+                            className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                              on
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "bg-surface-container-low text-on-surface-variant border-outline-variant hover:bg-surface-container-high"
+                            }`}
+                          >
+                            {seg}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
+                {!isEditor && segments.length === 0 && (
+                  <span className="text-sm text-on-surface-variant">None</span>
+                )}
+              </div>
+
               {/* Contributors */}
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
@@ -481,8 +540,21 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
                           </button>
                         )}
                       </div>
-                      <p className="text-sm text-on-surface bg-surface-container rounded-lg px-3 py-2 leading-relaxed">
-                        {c.body}
+                      <p className="text-sm text-on-surface bg-surface-container rounded-lg px-3 py-2 leading-relaxed whitespace-pre-wrap">
+                        {parseMentions(c.body).map((seg, i) =>
+                          seg.type === "text" ? (
+                            <span key={i}>{seg.value}</span>
+                          ) : (
+                            <span
+                              key={i}
+                              className={`font-semibold rounded px-0.5 ${
+                                seg.id === currentUser?.id ? "bg-primary/15 text-primary" : "text-primary"
+                              }`}
+                            >
+                              @{seg.name}
+                            </span>
+                          )
+                        )}
                       </p>
                     </div>
                   )
@@ -490,28 +562,10 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
                 <div ref={commentsEndRef} />
               </div>
 
-              {/* Comment input */}
-              <div className="flex-shrink-0 border-t border-border px-4 py-3 flex items-center gap-2">
-                <input
-                  value={commentBody}
-                  onChange={e => setCommentBody(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key === "Enter" && !e.nativeEvent.isComposing && e.keyCode !== 229 && !e.shiftKey) {
-                      e.preventDefault()
-                      handlePostComment()
-                    }
-                  }}
-                  placeholder="Add a comment…"
-                  className="flex-1 px-3 py-2 rounded-lg border border-outline-variant bg-surface-container text-on-surface text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow"
-                />
-                <button
-                  onClick={handlePostComment}
-                  disabled={!commentBody.trim() || postingComment}
-                  className="p-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
-                  aria-label="Post comment"
-                >
-                  <Send className="h-4 w-4" />
-                </button>
+              {/* Comment input — type @ to mention a teammate */}
+              <div className="flex-shrink-0 border-t border-border px-4 py-3 flex flex-col gap-1.5">
+                {commentError && <p className="text-xs text-red-600 font-medium">{commentError}</p>}
+                <MentionInput onSubmit={handlePostComment} />
               </div>
             </div>
           )}
@@ -526,7 +580,17 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
                     className="flex items-center gap-1.5 text-sm font-semibold text-red-500 hover:text-red-600 transition-colors">
                     <Trash2 className="h-3.5 w-3.5" /> Delete
                   </button>
-                ) : <div />}
+                ) : (
+                  <label className="flex items-center gap-2 text-sm text-on-surface-variant cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={notifyTeam}
+                      onChange={e => setNotifyTeam(e.target.checked)}
+                      className="h-4 w-4 rounded border-outline-variant accent-primary"
+                    />
+                    Notify the team
+                  </label>
+                )}
                 <div className="flex gap-2">
                   <button onClick={handleClose}
                     className="px-3 py-2 rounded-lg text-sm font-semibold border border-outline-variant hover:bg-surface-container-high transition-colors">
@@ -561,6 +625,19 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
             </div>
           </div>
         </div>
+      )}
+
+      {newCampaignOpen && (
+        <CreateCampaignDialog
+          stacked
+          open={newCampaignOpen}
+          onOpenChange={setNewCampaignOpen}
+          onCreated={async campaign => {
+            // Refresh before selecting, or the new id has no <option> yet
+            await refreshCampaigns()
+            setCampaignId(campaign.id)
+          }}
+        />
       )}
     </>
   )

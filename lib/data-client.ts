@@ -1,7 +1,7 @@
 "use client"
 
 import { createClient } from "@/lib/supabase/client"
-import type { Campaign, ContentItem, ContentItemWithCampaign, IdeaWithCreator, ItemComment, Profile, CampaignWithItems } from "./database.types"
+import type { AppNotification, Campaign, ContentItem, ContentItemWithCampaign, IdeaWithCreator, ItemComment, Profile, CampaignWithItems } from "./database.types"
 import { NO_CAMPAIGN_ID, NO_CAMPAIGN_LABEL } from "./database.types"
 
 // ---- Avatar ----
@@ -181,6 +181,7 @@ export async function getCampaignsWithItemsClient(): Promise<CampaignWithItems[]
       campaignType: parent.type,
       campaignProduct: parent.product ?? null,
       contributors: item.contributors ?? [],
+      audience_segments: item.audience_segments ?? [],
       assignee: item.assignee_id ? (profileMap[item.assignee_id] ?? null) : null,
     }
     parent.items.push(enriched)
@@ -292,5 +293,40 @@ export async function addItemCommentClient(itemId: string, body: string): Promis
 export async function deleteItemCommentClient(commentId: string): Promise<void> {
   const supabase = createClient()
   const { error } = await supabase.from("comments").delete().eq("id", commentId)
+  if (error) throw error
+}
+
+// ---- Notifications ----
+// RLS limits every query here to the signed-in user's own notifications.
+
+export async function getNotificationsClient(limit = 20): Promise<AppNotification[]> {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from("notifications")
+    .select("*, item:content_items(id, title, campaign_id, status)")
+    .order("created_at", { ascending: false })
+    .limit(limit)
+  if (error) throw error
+  return (data ?? []) as AppNotification[]
+}
+
+export async function markNotificationReadClient(id: string): Promise<void> {
+  const supabase = createClient()
+  const { error } = await supabase
+    .from("notifications").update({ read_at: new Date().toISOString() }).eq("id", id)
+  if (error) throw error
+}
+
+export async function markAllNotificationsReadClient(): Promise<void> {
+  const supabase = createClient()
+  const { error } = await supabase
+    .from("notifications").update({ read_at: new Date().toISOString() }).is("read_at", null)
+  if (error) throw error
+}
+
+/** Notify every other team member that this item has been started (editors only, enforced in SQL). */
+export async function notifyTeamClient(itemId: string): Promise<void> {
+  const supabase = createClient()
+  const { error } = await supabase.rpc("notify_team", { p_item_id: itemId })
   if (error) throw error
 }

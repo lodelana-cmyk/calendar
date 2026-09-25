@@ -28,6 +28,7 @@ export function CampaignDetailSheet({ campaign, onClose }: Props) {
   const [motion,    setMotion]    = useState<CampaignMotion>(campaign.motion)
   const [product,   setProduct]   = useState(campaign.product || "")
   const [objective, setObjective] = useState(campaign.objective || "")
+  const [endDate,   setEndDate]   = useState(campaign.end_date || "")
   const [saving,    setSaving]    = useState(false)
   const [selectedItem, setSelectedItem] = useState<ContentItemWithCampaign | null>(null)
   const [newItemOpen,  setNewItemOpen]  = useState(false)
@@ -75,7 +76,7 @@ export function CampaignDetailSheet({ campaign, onClose }: Props) {
   const handleSave = async () => {
     setSaving(true)
     try {
-      await updateCampaignClient(campaign.id, { title, type, motion, product, objective })
+      await updateCampaignClient(campaign.id, { title, type, motion, product, objective, end_date: endDate || null })
       refreshCampaigns()
     } finally {
       setSaving(false)
@@ -162,6 +163,16 @@ export function CampaignDetailSheet({ campaign, onClose }: Props) {
                   {PRODUCT_OPTIONS.map(p => <option key={p}>{p}</option>)}
                 </select>
               </div>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wide">Completion date</label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={e => setEndDate(e.target.value)}
+                className="w-full sm:w-56 px-3 py-2 rounded-lg border border-outline-variant bg-surface-container text-on-surface text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
+              />
             </div>
 
             <div className="flex flex-col gap-1.5">

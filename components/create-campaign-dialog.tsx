@@ -16,9 +16,11 @@ interface Props {
   initialObjective?: string
   /** Called with the newly created campaign, in addition to the default refresh + close */
   onCreated?: (campaign: Campaign) => void | Promise<void>
+  /** Render above another z-50 dialog (e.g. opened from the Add Item dialog) */
+  stacked?: boolean
 }
 
-export function CreateCampaignDialog({ open, onOpenChange, initialTitle, initialObjective, onCreated }: Props) {
+export function CreateCampaignDialog({ open, onOpenChange, initialTitle, initialObjective, onCreated, stacked }: Props) {
   const { refreshCampaigns } = useRefreshData()
 
   const [title,     setTitle]     = useState(initialTitle ?? "")
@@ -26,6 +28,7 @@ export function CreateCampaignDialog({ open, onOpenChange, initialTitle, initial
   const [motion,    setMotion]    = useState<CampaignMotion>("Both")
   const [product,   setProduct]   = useState("")
   const [objective, setObjective] = useState(initialObjective ?? "")
+  const [endDate,   setEndDate]   = useState("")
   const [saving,    setSaving]    = useState(false)
   const [error,     setError]     = useState("")
 
@@ -36,11 +39,13 @@ export function CreateCampaignDialog({ open, onOpenChange, initialTitle, initial
     setSaving(true)
     setError("")
     try {
-      const campaign = await createCampaignClient({ title: title.trim(), type, motion, product: product || null, objective: objective || null })
+      const campaign = await createCampaignClient({
+        title: title.trim(), type, motion, product: product || null, objective: objective || null, end_date: endDate || null,
+      })
       await onCreated?.(campaign)
       refreshCampaigns()
       onOpenChange(false)
-      setTitle(""); setType("Always-on"); setMotion("Both"); setProduct(""); setObjective("")
+      setTitle(""); setType("Always-on"); setMotion("Both"); setProduct(""); setObjective(""); setEndDate("")
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to create campaign")
     } finally {
@@ -50,8 +55,8 @@ export function CreateCampaignDialog({ open, onOpenChange, initialTitle, initial
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/40 z-50" onClick={() => onOpenChange(false)} />
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+      <div className={`fixed inset-0 bg-black/40 ${stacked ? "z-[60]" : "z-50"}`} onClick={() => onOpenChange(false)} />
+      <div className={`fixed inset-0 ${stacked ? "z-[60]" : "z-50"} flex items-center justify-center p-4 pointer-events-none`}>
         <div className="bg-background rounded-2xl border border-border shadow-2xl w-full max-w-md pointer-events-auto flex flex-col gap-6 p-6">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold text-on-surface">New Campaign</h2>
@@ -116,6 +121,16 @@ export function CreateCampaignDialog({ open, onOpenChange, initialTitle, initial
                 rows={2}
                 placeholder="What is this campaign trying to achieve?"
                 className="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface-container text-on-surface text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wide">Completion date</label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={e => setEndDate(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface-container text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
           </div>
