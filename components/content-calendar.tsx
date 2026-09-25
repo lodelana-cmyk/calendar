@@ -3,17 +3,18 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import {
   ChevronLeft, ChevronRight, Plus, CalendarDays, List,
-  Sparkles, Download, Columns
+  Sparkles, Download, Columns, SlidersHorizontal
 } from "lucide-react"
 import { useStore, useIsEditor } from "@/lib/store"
 import { useRefreshData } from "@/components/data-provider"
 import { updateContentItemClient, moveContentItemsClient } from "@/lib/data-client"
 import type { ContentItemWithCampaign, ItemStatus } from "@/lib/database.types"
 import {
-  MOTION_ACCENTS, CHANNEL_ICONS, STATUS_COLORS,
+  CHANNEL_ICONS, STATUS_COLORS,
   CHANNEL_OPTIONS, MOTION_OPTIONS, STATUS_OPTIONS, PRODUCT_OPTIONS,
-  NO_CAMPAIGN_ID
+  NO_CAMPAIGN_ID, campaignColor
 } from "@/lib/database.types"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { ContentItemChip } from "@/components/content-item-chip"
 import { ContentItemDialog } from "@/components/content-item-dialog"
 import { ImportPlanDialog } from "@/components/import-plan-dialog"
@@ -428,7 +429,8 @@ export function ContentCalendar() {
               {items.map(item => (
                 <div
                   key={item.id}
-                  className="w-full flex items-center gap-3 px-4 border-b border-border last:border-b-0 hover:bg-surface-container-low/60 transition-colors"
+                  style={{ borderLeftColor: campaignColor(item.campaign_id) }}
+                  className="w-full flex items-center gap-3 px-4 border-b border-l-4 border-border last:border-b-0 hover:bg-surface-container-low/60 transition-colors"
                 >
                   {isEditor && (
                     <input
@@ -443,13 +445,15 @@ export function ContentCalendar() {
                     onClick={() => openItem(item)}
                     className="flex-1 min-w-0 flex items-center gap-3 py-3 text-left"
                   >
-                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: STATUS_COLORS[item.status as ItemStatus]?.dot || "#94a3b8" }} aria-hidden="true" />
                     <span className="text-sm font-medium text-on-surface flex-1 truncate">{item.title}</span>
                     <span className="text-xs text-on-surface-variant flex-shrink-0">{item.publish_date ? parseDateStr(item.publish_date).toLocaleDateString("en-GB",{day:"numeric",month:"short"}) : ""}</span>
-                    <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-md flex-shrink-0 border border-outline-variant bg-surface-container-low text-on-surface-variant">
-                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: MOTION_ACCENTS[item.campaign.motion] || "#94a3b8" }} aria-hidden="true" />
-                      {item.campaign.motion}
+                    <span
+                      className="text-xs font-medium px-2 py-0.5 rounded-md flex-shrink-0 max-w-[180px] truncate text-on-surface"
+                      style={{ backgroundColor: `${campaignColor(item.campaign_id)}26` }}
+                    >
+                      {item.campaignTitle}
                     </span>
+                    <span className="text-xs text-on-surface-variant flex-shrink-0 w-20">{item.status}</span>
                     <span className="text-xs text-on-surface-variant flex-shrink-0">{CHANNEL_ICONS[item.channel] || ""} {item.channel}</span>
                   </button>
                 </div>
@@ -492,17 +496,27 @@ export function ContentCalendar() {
     )
   }
 
-  // ── legend ────────────────────────────────────────────────────────────────
+  // ── filters ───────────────────────────────────────────────────────────────
 
-  const usedMotions = [...new Set(campaigns.map(c => c.motion).filter(Boolean))]
+  const activeFilterCount = [
+    filterCampaign, filterChannel, filterAssignee, filterMotion, filterProduct, filterStatus,
+  ].filter(v => v !== "All").length
+
+  const clearFilters = () => {
+    setFilterCampaign("All"); setFilterChannel("All"); setFilterAssignee("All")
+    setFilterMotion("All");   setFilterProduct("All"); setFilterStatus("All")
+  }
+
+  const filterSelectCls =
+    "w-full text-xs bg-surface-container border border-outline-variant rounded-lg px-2.5 py-2 text-on-surface font-medium focus:outline-none focus:ring-2 focus:ring-ring"
 
   // ── render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-3">
 
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-3">
+      {/* Toolbar — single row */}
+      <div className="flex flex-wrap items-center gap-2">
 
         {/* Nav */}
         <div className="flex items-center gap-1 bg-surface-container-low border border-outline-variant rounded-xl px-1 py-1">
@@ -536,46 +550,52 @@ export function ContentCalendar() {
           })}
         </div>
 
-        {/* Filters */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* Campaign — first and most prominent */}
-          <select
-            value={filterCampaign}
-            onChange={e => setFilterCampaign(e.target.value)}
-            className="text-xs bg-surface-container border border-outline-variant rounded-lg px-2.5 py-2 text-on-surface font-medium focus:outline-none focus:ring-2 focus:ring-ring transition-shadow"
-          >
-            <option value="All">All campaigns</option>
-            {campaigns.map(c => (
-              <option key={c.id} value={c.id}>{c.title}</option>
-            ))}
-          </select>
-
-          {/* Remaining scalar filters */}
-          {[
-            { value: filterMotion,   setter: setFilterMotion,   label: "All motions",   options: MOTION_OPTIONS },
-            { value: filterChannel,  setter: setFilterChannel,  label: "All channels",  options: CHANNEL_OPTIONS },
-            { value: filterStatus,   setter: setFilterStatus,   label: "All statuses",  options: STATUS_OPTIONS },
-            { value: filterProduct,  setter: setFilterProduct,  label: "All products",  options: PRODUCT_OPTIONS },
-          ].map(({ value, setter, label, options }) => (
-            <select
-              key={label}
-              value={value}
-              onChange={e => setter(e.target.value)}
-              className="text-xs bg-surface-container border border-outline-variant rounded-lg px-2.5 py-2 text-on-surface font-medium focus:outline-none focus:ring-2 focus:ring-ring transition-shadow"
+        {/* Filters — collapsed into one popover to keep the header to a single row */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <button
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-colors ${
+                activeFilterCount > 0
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-outline-variant bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high"
+              }`}
             >
-              <option value="All">{label}</option>
-              {options.map(o => <option key={o}>{o}</option>)}
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              Filters
+              {activeFilterCount > 0 && (
+                <span className="ml-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-72 p-3 flex flex-col gap-2">
+            <select value={filterCampaign} onChange={e => setFilterCampaign(e.target.value)} className={filterSelectCls}>
+              <option value="All">All campaigns</option>
+              {campaigns.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
             </select>
-          ))}
-          <select
-            value={filterAssignee}
-            onChange={e => setFilterAssignee(e.target.value)}
-            className="text-xs bg-surface-container border border-outline-variant rounded-lg px-2.5 py-2 text-on-surface font-medium focus:outline-none focus:ring-2 focus:ring-ring transition-shadow"
-          >
-            <option value="All">All assignees</option>
-            {profiles.map(p => <option key={p.id} value={p.id}>{p.full_name}</option>)}
-          </select>
-        </div>
+            {[
+              { value: filterMotion,   setter: setFilterMotion,   label: "All motions",   options: MOTION_OPTIONS },
+              { value: filterChannel,  setter: setFilterChannel,  label: "All channels",  options: CHANNEL_OPTIONS },
+              { value: filterStatus,   setter: setFilterStatus,   label: "All statuses",  options: STATUS_OPTIONS },
+              { value: filterProduct,  setter: setFilterProduct,  label: "All products",  options: PRODUCT_OPTIONS },
+            ].map(({ value, setter, label, options }) => (
+              <select key={label} value={value} onChange={e => setter(e.target.value)} className={filterSelectCls}>
+                <option value="All">{label}</option>
+                {options.map(o => <option key={o}>{o}</option>)}
+              </select>
+            ))}
+            <select value={filterAssignee} onChange={e => setFilterAssignee(e.target.value)} className={filterSelectCls}>
+              <option value="All">All assignees</option>
+              {profiles.map(p => <option key={p.id} value={p.id}>{p.full_name}</option>)}
+            </select>
+            {activeFilterCount > 0 && (
+              <button onClick={clearFilters} className="self-end text-xs font-semibold text-primary hover:underline">
+                Clear filters
+              </button>
+            )}
+          </PopoverContent>
+        </Popover>
 
         <div className="flex-1" />
 
@@ -603,28 +623,13 @@ export function ContentCalendar() {
         </button>
       </div>
 
-      {/* Motion legend — neutral pills with accent dot */}
-      {usedMotions.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {usedMotions.map(motion => {
-            const accent = MOTION_ACCENTS[motion] || "#94a3b8"
-            return (
-              <span key={motion} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-outline-variant bg-surface-container text-xs font-medium text-on-surface-variant">
-                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: accent }} aria-hidden="true" />
-                {motion}
-              </span>
-            )
-          })}
-        </div>
-      )}
-
-      {/* Unscheduled lane */}
-      {renderUnscheduled()}
-
       {/* Calendar body */}
       {view === "month" && renderMonthGrid()}
       {view === "week"  && renderWeekGrid()}
       {view === "list"  && renderListView()}
+
+      {/* Unscheduled lane — below the grid so the calendar gets the top of the screen */}
+      {renderUnscheduled()}
 
       {/* Bulk move bar — list view only, editors only */}
       {view === "list" && isEditor && selectedIds.size > 0 && (

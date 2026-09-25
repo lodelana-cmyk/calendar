@@ -14,7 +14,7 @@ export function TopBar({ onMenuClick }: { onMenuClick?: () => void }) {
   }
 
   return (
-    <header className="w-full h-16 sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b border-border/30 flex items-center gap-4 px-6">
+    <header className="w-full h-12 sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b border-border/30 flex items-center gap-4 px-6">
       <button
         onClick={onMenuClick}
         className="lg:hidden h-9 w-9 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
