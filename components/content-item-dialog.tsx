@@ -15,7 +15,7 @@ import type {
 } from "@/lib/database.types"
 import {
   MOTION_ACCENTS, STATUS_COLORS, STATUS_OPTIONS, CHANNEL_OPTIONS, FORMAT_OPTIONS, CONTRIBUTOR_ROLE_OPTIONS,
-  NO_CAMPAIGN_ID,
+  NO_CAMPAIGN_ID, AUDIENCE_SEGMENT_GROUPS,
 } from "@/lib/database.types"
 
 const NEW_CAMPAIGN_OPTION = "__new_campaign__"
@@ -87,6 +87,7 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
     item ? (item.campaign_id ?? "") : (defaultCampaignId || realCampaigns[0]?.id || "")
   )
   const [contributors, setContribs]   = useState<Contributor[]>((item as any)?.contributors ?? [])
+  const [segments, setSegments]       = useState<string[]>(item?.audience_segments ?? [])
   const [saving, setSaving]           = useState(false)
   const [error, setError]             = useState("")
   const [confirmDel, setConfirmDel]   = useState(false)
@@ -121,6 +122,11 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
   const f = <K extends keyof typeof form>(key: K, val: typeof form[K]) =>
     setForm(prev => ({ ...prev, [key]: val }))
 
+  // Only send segments when they changed, so saves keep working even before
+  // the audience_segments column migration (scripts/008) has been run.
+  const segmentsChanged =
+    [...segments].sort().join("|") !== [...(item?.audience_segments ?? [])].sort().join("|")
+
   const handleSave = async () => {
     if (!form.title.trim()) {
       setError("Title is required")
@@ -145,6 +151,7 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
           brief_url: form.brief_url || null,
           live_url: form.live_url || null,
           contributors,
+          ...(segments.length > 0 ? { audience_segments: segments } : {}),
           sort_order: 0,
         })
       } else {
@@ -162,6 +169,7 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
           brief_url: form.brief_url || null,
           live_url: form.live_url || null,
           contributors,
+          ...(segmentsChanged ? { audience_segments: segments } : {}),
         })
       }
       await refreshCampaigns()
@@ -410,6 +418,40 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
                     )}
                   </div>
                 ))}
+              </div>
+
+              {/* Audience segments */}
+              <div className="flex flex-col gap-2">
+                <FieldLabel>Audience</FieldLabel>
+                {AUDIENCE_SEGMENT_GROUPS.map(group => (
+                  <div key={group.label} className="flex flex-col gap-1.5">
+                    <span className="text-[11px] text-on-surface-variant">{group.label}</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {group.segments.map(seg => {
+                        const on = segments.includes(seg)
+                        if (!isEditor && !on) return null
+                        return (
+                          <button
+                            key={seg}
+                            type="button"
+                            disabled={!isEditor}
+                            onClick={() => setSegments(prev => on ? prev.filter(x => x !== seg) : [...prev, seg])}
+                            className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                              on
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "bg-surface-container-low text-on-surface-variant border-outline-variant hover:bg-surface-container-high"
+                            }`}
+                          >
+                            {seg}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
+                {!isEditor && segments.length === 0 && (
+                  <span className="text-sm text-on-surface-variant">None</span>
+                )}
               </div>
 
               {/* Contributors */}

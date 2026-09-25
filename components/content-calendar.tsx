@@ -12,7 +12,7 @@ import type { ContentItemWithCampaign, ItemStatus } from "@/lib/database.types"
 import {
   CHANNEL_ICONS, STATUS_COLORS,
   CHANNEL_OPTIONS, MOTION_OPTIONS, STATUS_OPTIONS, PRODUCT_OPTIONS,
-  NO_CAMPAIGN_ID, campaignColor
+  NO_CAMPAIGN_ID, campaignColor, AUDIENCE_SEGMENTS
 } from "@/lib/database.types"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { ContentItemChip } from "@/components/content-item-chip"
@@ -99,6 +99,7 @@ export function ContentCalendar() {
   const [filterMotion,   setFilterMotion]   = useState("All")
   const [filterProduct,  setFilterProduct]  = useState("All")
   const [filterStatus,   setFilterStatus]   = useState("All")
+  const [filterSegment,  setFilterSegment]  = useState("All")
 
   // Read filters from URL on mount
   useEffect(() => {
@@ -109,6 +110,7 @@ export function ContentCalendar() {
     if (p.get("motion"))   setFilterMotion(p.get("motion")!)
     if (p.get("product"))  setFilterProduct(p.get("product")!)
     if (p.get("status"))   setFilterStatus(p.get("status")!)
+    if (p.get("segment"))  setFilterSegment(p.get("segment")!)
   }, [])
 
   // Write filters back to URL (shareable links)
@@ -121,9 +123,10 @@ export function ContentCalendar() {
     setOrDelete("motion",   filterMotion)
     setOrDelete("product",  filterProduct)
     setOrDelete("status",   filterStatus)
+    setOrDelete("segment",  filterSegment)
     const qs = p.toString()
     window.history.replaceState(null, "", qs ? `?${qs}` : window.location.pathname)
-  }, [filterCampaign, filterChannel, filterAssignee, filterMotion, filterProduct, filterStatus])
+  }, [filterCampaign, filterChannel, filterAssignee, filterMotion, filterProduct, filterStatus, filterSegment])
 
   // Drop the selection whenever the visible set changes, so nothing stays
   // selected off-screen and gets moved by surprise.
@@ -131,7 +134,7 @@ export function ContentCalendar() {
     setSelectedIds(new Set())
     setMoveTarget("")
     setMoveError("")
-  }, [view, year, month, filterCampaign, filterChannel, filterAssignee, filterMotion, filterProduct, filterStatus])
+  }, [view, year, month, filterCampaign, filterChannel, filterAssignee, filterMotion, filterProduct, filterStatus, filterSegment])
 
   // dialogs
   const [selectedItem, setSelectedItem] = useState<ContentItemWithCampaign | null>(null)
@@ -165,8 +168,9 @@ export function ContentCalendar() {
     if (filterMotion   !== "All" && item.campaign.motion !== filterMotion) return false
     if (filterProduct  !== "All" && item.campaign.product !== filterProduct) return false
     if (filterStatus   !== "All" && item.status !== filterStatus) return false
+    if (filterSegment  !== "All" && !(item.audience_segments ?? []).includes(filterSegment)) return false
     return true
-  }), [allItems, filterCampaign, filterChannel, filterAssignee, filterMotion, filterProduct, filterStatus])
+  }), [allItems, filterCampaign, filterChannel, filterAssignee, filterMotion, filterProduct, filterStatus, filterSegment])
 
   // ── navigation ─────────────────────────────────────────────────────────────
 
@@ -446,6 +450,16 @@ export function ContentCalendar() {
                     className="flex-1 min-w-0 flex items-center gap-3 py-3 text-left"
                   >
                     <span className="text-sm font-medium text-on-surface flex-1 truncate">{item.title}</span>
+                    {(item.audience_segments ?? []).length > 0 && (
+                      <span className="hidden md:flex gap-1 flex-shrink-0">
+                        {item.audience_segments.slice(0, 2).map(seg => (
+                          <span key={seg} className="text-[10px] px-1.5 py-0.5 rounded-full border border-outline-variant text-on-surface-variant">{seg}</span>
+                        ))}
+                        {item.audience_segments.length > 2 && (
+                          <span className="text-[10px] text-on-surface-variant">+{item.audience_segments.length - 2}</span>
+                        )}
+                      </span>
+                    )}
                     <span className="text-xs text-on-surface-variant flex-shrink-0">{item.publish_date ? parseDateStr(item.publish_date).toLocaleDateString("en-GB",{day:"numeric",month:"short"}) : ""}</span>
                     <span
                       className="text-xs font-medium px-2 py-0.5 rounded-md flex-shrink-0 max-w-[180px] truncate text-on-surface"
@@ -499,12 +513,13 @@ export function ContentCalendar() {
   // ── filters ───────────────────────────────────────────────────────────────
 
   const activeFilterCount = [
-    filterCampaign, filterChannel, filterAssignee, filterMotion, filterProduct, filterStatus,
+    filterCampaign, filterChannel, filterAssignee, filterMotion, filterProduct, filterStatus, filterSegment,
   ].filter(v => v !== "All").length
 
   const clearFilters = () => {
     setFilterCampaign("All"); setFilterChannel("All"); setFilterAssignee("All")
     setFilterMotion("All");   setFilterProduct("All"); setFilterStatus("All")
+    setFilterSegment("All")
   }
 
   const filterSelectCls =
@@ -579,6 +594,7 @@ export function ContentCalendar() {
               { value: filterChannel,  setter: setFilterChannel,  label: "All channels",  options: CHANNEL_OPTIONS },
               { value: filterStatus,   setter: setFilterStatus,   label: "All statuses",  options: STATUS_OPTIONS },
               { value: filterProduct,  setter: setFilterProduct,  label: "All products",  options: PRODUCT_OPTIONS },
+              { value: filterSegment,  setter: setFilterSegment,  label: "All audiences", options: AUDIENCE_SEGMENTS },
             ].map(({ value, setter, label, options }) => (
               <select key={label} value={value} onChange={e => setter(e.target.value)} className={filterSelectCls}>
                 <option value="All">{label}</option>

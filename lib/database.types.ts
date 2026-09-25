@@ -94,6 +94,8 @@ export interface ContentItem {
   date_confidence: DateConfidence
   content_role: string | null
   contributors: Contributor[]
+  /** Target audiences — values from AUDIENCE_SEGMENTS */
+  audience_segments: string[]
   notes: string | null
   brief_url: string | null
   live_url: string | null
@@ -211,6 +213,13 @@ export const STATUS_OPTIONS: ItemStatus[] = [
 ]
 
 export const CONTRIBUTOR_ROLE_OPTIONS: ContributorRole[] = ["Writer", "Designer", "Video", "Reviewer"]
+
+/** Audience tags for content items, grouped for display. Add values here freely — the DB column has no CHECK. */
+export const AUDIENCE_SEGMENT_GROUPS: { label: string; segments: string[] }[] = [
+  { label: "Lifecycle stage",     segments: ["Onboarding", "Product adoption", "Upsell", "Retention", "Win-back"] },
+  { label: "Subscription status", segments: ["Trial", "Free", "Paid", "Churned"] },
+]
+export const AUDIENCE_SEGMENTS: string[] = AUDIENCE_SEGMENT_GROUPS.flatMap(g => g.segments)
 
 export const ROLE_OPTIONS = ["Editor", "Videographer", "Designer", "Copywriter", "Strategist", "Producer", "Other"]
 
