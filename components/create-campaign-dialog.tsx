@@ -59,7 +59,7 @@ export function CreateCampaignDialog({ open, onOpenChange, initialTitle, initial
       <div className={`fixed inset-0 ${stacked ? "z-[60]" : "z-50"} flex items-center justify-center p-4 pointer-events-none`}>
         <div className="bg-background rounded-2xl border border-border shadow-2xl w-full max-w-md pointer-events-auto flex flex-col gap-6 p-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-on-surface">New Campaign</h2>
+            <h2 className="text-[22px] text-on-surface">New campaign</h2>
             <button onClick={() => onOpenChange(false)} className="p-1.5 hover:bg-surface-container-high rounded-lg transition-colors">
               <X className="h-5 w-5" />
             </button>
@@ -146,7 +146,7 @@ export function CreateCampaignDialog({ open, onOpenChange, initialTitle, initial
               disabled={saving}
               className="px-4 py-2 rounded-full text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/85 disabled:opacity-60 transition-colors"
             >
-              {saving ? "Creating…" : "Create Campaign"}
+              {saving ? "Creating…" : "Create campaign"}
             </button>
           </div>
         </div>

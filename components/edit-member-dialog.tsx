@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useRef } from "react"
-import Image from "next/image"
 import { Camera, Loader2, Check, X } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { updateProfileClient, uploadAvatarClient } from "@/lib/data-client"
@@ -91,13 +90,13 @@ export function EditMemberDialog({ member, open, onOpenChange, onSaved }: EditMe
     }
   }
 
-  const displayAvatarUrl = avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${fullName}`
+  const displayAvatarUrl = avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(fullName)}`
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-surface-container-low border-none rounded-2xl max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold headline text-on-surface">Edit Team Member</DialogTitle>
+          <DialogTitle className="text-[22px] font-semibold text-on-surface">Edit team member</DialogTitle>
         </DialogHeader>
         
         <div className="flex flex-col gap-6 mt-4">
@@ -110,7 +109,7 @@ export function EditMemberDialog({ member, open, onOpenChange, onSaved }: EditMe
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
                 ) : (
-                  <Image
+                  <img
                     src={displayAvatarUrl}
                     alt={fullName}
                     width={96}

@@ -72,7 +72,7 @@ const selectCls =
 function segmentCls(active: boolean) {
   return `py-2 px-3 rounded-lg text-sm font-semibold border transition-colors ${
     active
-      ? "bg-primary text-white border-primary"
+      ? "bg-primary text-primary-foreground border-primary"
       : "bg-surface-container-low text-on-surface-variant border-outline-variant hover:bg-surface-container-high"
   }`
 }
@@ -246,9 +246,9 @@ export function ImportPlanDialog({ open, onOpenChange, calendarYear, calendarMon
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
-            {step === "paste" && "Import Content Plan"}
-            {step === "preview" && "Review Parsed Plan"}
-            {step === "done" && "Plan Imported"}
+            {step === "paste" && "Import a content plan"}
+            {step === "preview" && "Review the plan"}
+            {step === "done" && "Plan imported"}
           </DialogTitle>
         </DialogHeader>
 

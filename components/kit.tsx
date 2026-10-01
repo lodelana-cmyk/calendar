@@ -232,3 +232,28 @@ export function ErrorText({ children }: { children: ReactNode }) {
   if (!children) return null
   return <p className="text-[13px] text-error">{children}</p>
 }
+
+// ── Avatar ─────────────────────────────────────────────────────────────────
+
+/**
+ * Plain <img>, deliberately not next/image: the default DiceBear avatars are
+ * SVGs, which next/image refuses to serve unless SVG is globally allowed.
+ */
+export function Avatar({ src, name, size = 32, className }: {
+  src?: string | null
+  name: string
+  size?: number
+  className?: string
+}) {
+  const url = src || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name || "user")}`
+  return (
+    <img
+      src={url}
+      alt=""
+      width={size}
+      height={size}
+      style={{ width: size, height: size }}
+      className={cx("rounded-full object-cover bg-surface-container-low border border-border flex-shrink-0", className)}
+    />
+  )
+}

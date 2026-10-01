@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import Image from "next/image"
 import { UserPlus, Pencil, Users } from "lucide-react"
 import { useStore } from "@/lib/store"
 import { useRefreshData } from "@/components/data-provider"
@@ -9,28 +8,32 @@ import { updateProfileClient } from "@/lib/data-client"
 import { TeamSkeleton } from "@/components/loading-skeletons"
 import { EditMemberDialog } from "@/components/edit-member-dialog"
 import { InviteMemberDialog } from "@/components/invite-member-dialog"
-import type { Profile } from "@/lib/database.types"
-
-const ROLE_LABELS: Record<string, string> = {
-  editor: "Editor",
-  viewer: "Viewer",
-}
+import { Avatar, Button, PageHeader, StatTile, cx } from "@/components/kit"
+import type { CampaignWithItems, Profile } from "@/lib/database.types"
 
 export default function TeamPage() {
-  const { teamMembers, campaigns, isLoading } = useStore()
+  const store = useStore()
+  const teamMembers: Profile[] = store.teamMembers
+  const campaigns: CampaignWithItems[] = store.campaigns
   const { refreshProfiles } = useRefreshData()
   const [editingMember, setEditingMember] = useState<Profile | null>(null)
   const [inviteOpen, setInviteOpen] = useState(false)
 
-  if (isLoading) return <TeamSkeleton />
+  if (store.isLoading) return <TeamSkeleton />
 
-  // item counts per person
+  const allItems = campaigns.flatMap(c => c.items || [])
   const countItems = (memberId: string) => {
-    const items = campaigns.flatMap(c => c.items || [])
-    const assigned = items.filter(i => i.assignee_id === memberId)
-    const published = assigned.filter(i => i.status === "Published").length
-    return { total: assigned.length, published }
+    const assigned = allItems.filter(i => i.assignee_id === memberId)
+    return {
+      total: assigned.length,
+      inProgress: assigned.filter(i => i.status === "In progress" || i.status === "In review").length,
+      published: assigned.filter(i => i.status === "Published").length,
+    }
   }
+
+  const assignedTotal  = allItems.filter(i => i.assignee_id).length
+  const publishedTotal = allItems.filter(i => i.status === "Published").length
+  const editors        = teamMembers.filter(m => m.app_role === "editor").length
 
   const handleRoleToggle = async (member: Profile) => {
     const next = member.app_role === "editor" ? "viewer" : "editor"
@@ -39,22 +42,16 @@ export default function TeamPage() {
   }
 
   return (
-    <div className="px-4 sm:px-8 lg:px-10 py-6 flex flex-col gap-6">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-[28px] font-semibold text-on-surface tracking-tight">Team</h1>
-          <p className="text-sm text-on-surface-variant font-medium">
-            {teamMembers.length} member{teamMembers.length !== 1 ? "s" : ""}
-          </p>
-        </div>
-        <button
-          onClick={() => setInviteOpen(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/85 transition-colors flex-shrink-0"
-        >
-          <UserPlus className="h-4 w-4" />
-          Invite
-        </button>
-      </div>
+    <div className="px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-8 max-w-6xl mx-auto">
+      <PageHeader
+        title="Team"
+        subtitle={`${teamMembers.length} member${teamMembers.length !== 1 ? "s" : ""}`}
+        actions={
+          <Button onClick={() => setInviteOpen(true)}>
+            <UserPlus className="h-4 w-4" /> Invite
+          </Button>
+        }
+      />
 
       {teamMembers.length === 0 ? (
         <div className="rounded-2xl border border-border p-16 flex flex-col items-center gap-4 text-center">
@@ -62,64 +59,77 @@ export default function TeamPage() {
           <p className="text-sm text-on-surface-variant">No team members yet. Invite someone to get started.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {teamMembers.map(member => {
-            const { total, published } = countItems(member.id)
-            const progress = total > 0 ? Math.round((published / total) * 100) : 0
-            return (
-              <div key={member.id} className="rounded-2xl border border-border bg-surface-container p-5 flex flex-col gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="relative flex-shrink-0">
-                    <div className="h-12 w-12 rounded-full overflow-hidden ring-2 ring-outline-variant">
-                      <Image
-                        src={member.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.full_name}`}
-                        alt={member.full_name}
-                        width={48} height={48}
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                    <span className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-surface-container ${member.is_online ? "bg-emerald-500" : "bg-slate-400"}`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-on-surface truncate">{member.full_name}</p>
-                    <p className="text-xs text-on-surface-variant truncate">{member.role || "Team Member"}</p>
-                  </div>
-                  {/* Role badge + toggle */}
-                  <button
-                    onClick={() => handleRoleToggle(member)}
-                    title="Click to toggle Editor/Viewer role"
-                    className={`text-xs px-2.5 py-1 rounded-full font-medium border transition-colors ${
-                      member.app_role === "editor"
-                        ? "border-primary/40 bg-primary/10 text-primary hover:bg-primary/20"
-                        : "border-outline-variant bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high"
-                    }`}
-                  >
-                    {ROLE_LABELS[member.app_role || "editor"] ?? "Editor"}
-                  </button>
-                </div>
+        <>
+          <div className="rounded-2xl border border-border bg-surface-bright grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-border overflow-hidden">
+            <StatTile label="Members" value={teamMembers.length} note={`${editors} can edit`} />
+            <StatTile label="Items assigned" value={assignedTotal} note={`of ${allItems.length} total`} />
+            <StatTile label="Published" value={publishedTotal} />
+            <StatTile label="Online now" value={teamMembers.filter(m => m.is_online).length} />
+          </div>
 
-                {/* Stats */}
-                <div className="flex items-center gap-4 text-xs text-on-surface-variant">
-                  <span><strong className="text-on-surface">{total}</strong> assigned</span>
-                  <span><strong className="text-on-surface">{published}</strong> published</span>
-                </div>
-
-                {/* Progress */}
-                <div className="h-1.5 rounded-full bg-outline-variant overflow-hidden">
-                  <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${progress}%` }} />
-                </div>
-
-                {/* Edit button */}
-                <button
-                  onClick={() => setEditingMember(member)}
-                  className="flex items-center justify-center gap-2 py-2 rounded-full border border-outline-variant text-on-surface-variant text-xs font-medium hover:bg-surface-container-low transition-colors"
-                >
-                  <Pencil className="h-3.5 w-3.5" /> Edit profile
-                </button>
-              </div>
-            )
-          })}
-        </div>
+          <div className="flex flex-col gap-4">
+            <h2 className="text-[22px] text-on-surface">People</h2>
+            <div className="rounded-2xl border border-border bg-surface-bright overflow-x-auto">
+              <table className="w-full text-sm min-w-[640px]">
+                <thead>
+                  <tr className="bg-surface-container-low text-left text-[13px] text-on-surface-variant">
+                    <th className="font-normal px-5 py-3">Name</th>
+                    <th className="font-normal px-4 py-3">Access</th>
+                    <th className="font-normal px-4 py-3 text-right">Assigned</th>
+                    <th className="font-normal px-4 py-3 text-right">In progress</th>
+                    <th className="font-normal px-4 py-3 text-right">Published</th>
+                    <th className="font-normal px-5 py-3"><span className="sr-only">Actions</span></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {teamMembers.map(member => {
+                    const { total, inProgress, published } = countItems(member.id)
+                    return (
+                      <tr key={member.id} className="hover:bg-surface-container-low/50 transition-colors">
+                        <td className="px-5 py-3">
+                          <div className="flex items-center gap-3">
+                            <span className="relative">
+                              <Avatar src={member.avatar_url} name={member.full_name} size={36} />
+                              {member.is_online && (
+                                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-on-surface border-2 border-surface-bright" aria-label="Online" />
+                              )}
+                            </span>
+                            <span className="min-w-0">
+                              <span className="block font-medium text-on-surface truncate">{member.full_name}</span>
+                              <span className="block text-[13px] text-on-surface-variant truncate">{member.role || "Team member"}</span>
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <button
+                            onClick={() => handleRoleToggle(member)}
+                            title="Click to switch between Editor and Viewer"
+                            className={cx(
+                              "text-xs px-2.5 py-1 rounded-full font-medium border transition-colors",
+                              member.app_role === "editor"
+                                ? "border-primary bg-primary text-primary-foreground hover:bg-primary/85"
+                                : "border-outline-variant text-on-surface-variant hover:border-on-surface/30",
+                            )}
+                          >
+                            {member.app_role === "viewer" ? "Viewer" : "Editor"}
+                          </button>
+                        </td>
+                        <td className="px-4 py-3 text-right tabular-nums text-on-surface">{total || "—"}</td>
+                        <td className="px-4 py-3 text-right tabular-nums text-on-surface">{inProgress || "—"}</td>
+                        <td className="px-4 py-3 text-right tabular-nums text-on-surface">{published || "—"}</td>
+                        <td className="px-5 py-3 text-right">
+                          <Button variant="ghost" size="sm" onClick={() => setEditingMember(member)}>
+                            <Pencil className="h-3.5 w-3.5" /> Edit
+                          </Button>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
       )}
 
       <InviteMemberDialog open={inviteOpen} onOpenChange={setInviteOpen} />

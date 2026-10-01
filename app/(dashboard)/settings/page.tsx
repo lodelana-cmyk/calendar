@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Check } from "lucide-react"
 import { MOTION_OPTIONS, CHANNEL_OPTIONS, PRODUCT_OPTIONS } from "@/lib/database.types"
+import { Button, Field, PageHeader, Pill, Section, fieldCls } from "@/components/kit"
 
 export default function SettingsPage() {
   const [workspaceName, setWorkspaceName] = useState("The Editorial Studio")
@@ -14,86 +15,41 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="px-4 sm:px-8 lg:px-10 py-6 flex flex-col gap-8 max-w-3xl">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-[28px] font-semibold text-on-surface tracking-tight">Settings</h1>
-        <p className="text-sm text-on-surface-variant font-medium">Configure your workspace</p>
+    <div className="px-4 sm:px-6 py-10 flex flex-col max-w-2xl mx-auto w-full">
+      <PageHeader title="Settings" subtitle="Your workspace." />
+
+      <div className="flex flex-col mt-2">
+        <Section title="General">
+          <Field label="Workspace name">
+            <input value={workspaceName} onChange={e => setWorkspaceName(e.target.value)} className={fieldCls} />
+          </Field>
+        </Section>
+
+        <Section title="Campaign motions" description="Motion categories used across campaigns.">
+          <div className="flex flex-wrap gap-2">
+            {MOTION_OPTIONS.map(m => <Pill key={m} className="px-3 py-1 text-[13px]">{m}</Pill>)}
+          </div>
+          <p className="text-[13px] text-on-surface-variant">Motions are defined in code. Ask your developer to add or rename them.</p>
+        </Section>
+
+        <Section title="Channels" description="Distribution channels available when creating content items.">
+          <div className="flex flex-wrap gap-2">
+            {CHANNEL_OPTIONS.map(c => <Pill key={c} className="px-3 py-1 text-[13px]">{c}</Pill>)}
+          </div>
+        </Section>
+
+        <Section title="Products" description="Threecolts products used to tag campaigns.">
+          <div className="flex flex-wrap gap-2">
+            {PRODUCT_OPTIONS.map(p => <Pill key={p} className="px-3 py-1 text-[13px]">{p}</Pill>)}
+          </div>
+        </Section>
       </div>
 
-      {/* General */}
-      <Section title="General">
-        <Field label="Workspace name">
-          <input
-            value={workspaceName}
-            onChange={e => setWorkspaceName(e.target.value)}
-            className="field-input"
-          />
-        </Field>
-      </Section>
-
-      {/* Motions */}
-      <Section title="Campaign Motions" description="Colour-coded motion categories used across campaigns">
-        <div className="flex flex-wrap gap-2">
-          {MOTION_OPTIONS.map(m => (
-            <span key={m} className="text-xs px-3 py-1.5 rounded-full bg-surface-container border border-outline-variant text-on-surface font-medium">
-              {m}
-            </span>
-          ))}
-        </div>
-        <p className="text-xs text-on-surface-variant mt-1">Motions are defined in code. Contact your developer to add or rename them.</p>
-      </Section>
-
-      {/* Channels */}
-      <Section title="Channels" description="Distribution channels available when creating content items">
-        <div className="flex flex-wrap gap-2">
-          {CHANNEL_OPTIONS.map(c => (
-            <span key={c} className="text-xs px-3 py-1.5 rounded-full bg-surface-container border border-outline-variant text-on-surface font-medium">
-              {c}
-            </span>
-          ))}
-        </div>
-      </Section>
-
-      {/* Products */}
-      <Section title="Products" description="Threecolts product list used to tag campaigns">
-        <div className="flex flex-wrap gap-2">
-          {PRODUCT_OPTIONS.map(p => (
-            <span key={p} className="text-xs px-3 py-1.5 rounded-full bg-surface-container border border-outline-variant text-on-surface font-medium">
-              {p}
-            </span>
-          ))}
-        </div>
-      </Section>
-
-      <div className="flex justify-end">
-        <button
-          onClick={handleSave}
-          className="flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/85 transition-colors"
-        >
+      <div className="flex justify-end pt-6">
+        <Button onClick={handleSave}>
           {saved ? <><Check className="h-4 w-4" /> Saved</> : "Save changes"}
-        </button>
+        </Button>
       </div>
-    </div>
-  )
-}
-
-function Section({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
-  return (
-    <div className="rounded-2xl border border-border bg-surface-container p-6 flex flex-col gap-4">
-      <div>
-        <h2 className="text-sm font-bold text-on-surface">{title}</h2>
-        {description && <p className="text-xs text-on-surface-variant mt-0.5">{description}</p>}
-      </div>
-      {children}
-    </div>
-  )
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <label className="text-[13px] text-on-surface-variant">{label}</label>
-      {children}
     </div>
   )
 }

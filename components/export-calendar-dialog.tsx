@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react"
 import { X, FileText, Table2, Download } from "lucide-react"
 import type { ContentItemWithCampaign } from "@/lib/database.types"
-import { MOTION_ACCENTS, STATUS_COLORS } from "@/lib/database.types"
+import { STATUS_COLORS, campaignColor } from "@/lib/database.types"
 
 // ---- date helpers ----
 function toDS(d: Date) {
@@ -82,7 +82,7 @@ function buildHtml(items: ContentItemWithCampaign[], start: Date, end: Date, lab
       const day = parseDS(date).getDate()
       const dayItems = byDate[date] || []
       const tasksHtml = dayItems.map(it => {
-        const accent = MOTION_ACCENTS[it.campaignMotion] || "#94a3b8"
+        const accent = campaignColor(it.campaign_id)
         return `<div class="chip" style="border-left:3px solid ${accent}">
           <span class="dot" style="background:${statusDot(it.status)}"></span>
           <span class="lbl">${escape(it.title)}</span>
@@ -99,34 +99,34 @@ function buildHtml(items: ContentItemWithCampaign[], start: Date, end: Date, lab
 <head><meta charset="UTF-8"><title>Content Calendar – ${escape(label)}</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f8fafc;color:#0f172a;padding:32px}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f1f0ed;color:#141414;padding:32px}
 .wrap{max-width:1200px;margin:0 auto}
 h1{font-size:24px;font-weight:800;letter-spacing:-.02em}
-.sub{color:#64748b;font-size:13px;margin-top:4px}
+.sub{color:#6e6c68;font-size:13px;margin-top:4px}
 .stats{display:flex;gap:12px;margin:20px 0;flex-wrap:wrap}
-.stat{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:10px 18px}
+.stat{background:#faf9f7;border:1px solid #dfddd8;border-radius:12px;padding:10px 18px}
 .stat b{display:block;font-size:20px;font-weight:800}
-.stat span{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#64748b;font-weight:600}
-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden}
-thead th{background:#f1f5f9;padding:10px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#64748b;border-bottom:1px solid #e2e8f0}
-td{vertical-align:top;width:14.28%;border:1px solid #e2e8f0;padding:6px;min-height:100px}
-td.empty{background:#f8fafc}
-.daynum{font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:4px}
-.chip{border-radius:6px;padding:4px 6px;font-size:11px;font-weight:600;margin-bottom:4px;display:flex;align-items:flex-start;gap:5px;background:#f8fafc;border:1px solid #e2e8f0;color:#0f172a}
+.stat span{font-size:11px;color:#6e6c68;font-weight:600}
+table{width:100%;border-collapse:collapse;background:#faf9f7;border:1px solid #dfddd8;border-radius:12px;overflow:hidden}
+thead th{background:#e9e8e4;padding:10px;font-size:11px;color:#6e6c68;border-bottom:1px solid #dfddd8}
+td{vertical-align:top;width:14.28%;border:1px solid #dfddd8;padding:6px;min-height:100px}
+td.empty{background:#f1f0ed}
+.daynum{font-size:11px;font-weight:700;color:#a8a5a0;margin-bottom:4px}
+.chip{border-radius:6px;padding:4px 6px;font-size:11px;font-weight:600;margin-bottom:4px;display:flex;align-items:flex-start;gap:5px;background:#f1f0ed;border:1px solid #dfddd8;color:#141414}
 .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:2px}
 .lbl{flex:1}
 .who{font-size:9px;opacity:.7;font-weight:800;flex-shrink:0}
-footer{margin-top:20px;font-size:11px;color:#94a3b8}
-@media print{body{padding:8px;background:#fff}@page{size:landscape;margin:10mm}}
+footer{margin-top:20px;font-size:11px;color:#a8a5a0}
+@media print{body{padding:8px;background:#faf9f7}@page{size:landscape;margin:10mm}}
 </style></head>
 <body><div class="wrap">
 <h1>Content Calendar</h1>
 <div class="sub">Threecolts · ${escape(label)} · Exported ${new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}</div>
 <div class="stats">
   <div class="stat"><b>${items.length}</b><span>Total</span></div>
-  <div class="stat"><b style="color:#10b981">${done}</b><span>Published</span></div>
-  <div class="stat"><b style="color:#3b82f6">${inProg}</b><span>In Progress</span></div>
-  <div class="stat"><b style="color:#f59e0b">${inReview}</b><span>In Review</span></div>
+  <div class="stat"><b>${done}</b><span>Published</span></div>
+  <div class="stat"><b>${inProg}</b><span>In progress</span></div>
+  <div class="stat"><b>${inReview}</b><span>In review</span></div>
 </div>
 <table>
 <thead><tr><th>Monday</th><th>Tuesday</th><th>Wednesday</th><th>Thursday</th><th>Friday</th><th>Saturday</th><th>Sunday</th></tr></thead>
@@ -191,7 +191,7 @@ export function ExportCalendarDialog({
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
         <div role="dialog" aria-modal="true" className="bg-background border border-border rounded-2xl shadow-2xl w-full max-w-md p-6 flex flex-col gap-5 pointer-events-auto max-h-[90vh] overflow-y-auto">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-on-surface">Export Calendar</h2>
+            <h2 className="text-[22px] text-on-surface">Export calendar</h2>
             <button onClick={() => onOpenChange(false)} className="p-1.5 hover:bg-surface-container-high rounded-lg transition-colors">
               <X className="h-5 w-5" />
             </button>
@@ -238,7 +238,7 @@ export function ExportCalendarDialog({
             <label className="text-[13px] text-on-surface-variant">Format</label>
             <div className="grid grid-cols-2 gap-2">
               {([
-                { fmt: "html" as Format, Icon: FileText, label: "Calendar Doc", desc: "Styled HTML. Open in browser, print to PDF." },
+                { fmt: "html" as Format, Icon: FileText, label: "Calendar document", desc: "Styled HTML. Open in browser, print to PDF." },
                 { fmt: "csv"  as Format, Icon: Table2,   label: "Spreadsheet",  desc: "CSV for Excel or Google Sheets." },
               ]).map(({ fmt, Icon, label, desc }) => (
                 <button key={fmt} onClick={() => setFormat(fmt)}
@@ -263,7 +263,7 @@ export function ExportCalendarDialog({
           <button onClick={doExport} disabled={invalid || inRange.length === 0}
             className="w-full py-2.5 px-4 rounded-full bg-primary text-primary-foreground text-sm font-medium flex items-center justify-center gap-2 hover:bg-primary/85 transition-colors disabled:opacity-40">
             <Download className="h-4 w-4" />
-            {format === "csv" ? "Download CSV" : "Download Calendar Doc"}
+            {format === "csv" ? "Download CSV" : "Download calendar"}
           </button>
         </div>
       </div>

@@ -4,7 +4,7 @@ import { useMemo, useState } from "react"
 import Link from "next/link"
 import { Search, ExternalLink, Copy, Check } from "lucide-react"
 import { useStore } from "@/lib/store"
-import { DashboardSkeleton } from "@/components/loading-skeletons"
+import { ListSkeleton } from "@/components/loading-skeletons"
 import type { CampaignWithItems } from "@/lib/database.types"
 import { CHANNEL_OPTIONS, CHANNEL_ICONS, NO_CAMPAIGN_ID, campaignColor } from "@/lib/database.types"
 
@@ -47,7 +47,7 @@ export default function LibraryPage() {
     return true
   })
 
-  if (isLoading) return <DashboardSkeleton />
+  if (isLoading) return <ListSkeleton />
 
   const copy = async (id: string, url: string) => {
     try {

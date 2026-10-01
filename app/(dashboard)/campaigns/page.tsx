@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Plus, Search } from "lucide-react"
 import { useStore } from "@/lib/store"
-import { DashboardSkeleton } from "@/components/loading-skeletons"
+import { ListSkeleton } from "@/components/loading-skeletons"
 import { CampaignCard } from "@/components/campaign-card"
 import { CampaignDetailSheet } from "@/components/campaign-detail-sheet"
 import { CreateCampaignDialog } from "@/components/create-campaign-dialog"
@@ -23,7 +23,7 @@ export default function CampaignsPage() {
   const [search,         setSearch]         = useState("")
   const [filterMotion,   setFilterMotion]   = useState("All")
 
-  if (isLoading) return <DashboardSkeleton />
+  if (isLoading) return <ListSkeleton />
 
   const filtered = campaigns.filter(c => {
     const matchSearch = !search || c.title.toLowerCase().includes(search.toLowerCase())
@@ -54,7 +54,7 @@ export default function CampaignsPage() {
           className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/85 transition-colors flex-shrink-0"
         >
           <Plus className="h-4 w-4" />
-          New Campaign
+          New campaign
         </button>
       </div>
 

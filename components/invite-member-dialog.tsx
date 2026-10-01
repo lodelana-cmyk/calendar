@@ -85,7 +85,7 @@ export function InviteMemberDialog({ open, onOpenChange }: InviteMemberDialogPro
         <DialogHeader>
           <DialogTitle className="headline text-on-surface flex items-center gap-2">
             <UserPlus className="h-5 w-5 text-primary" />
-            {success ? "Member Invited" : "Invite Team Member"}
+            {success ? "Member invited" : "Invite a team member"}
           </DialogTitle>
         </DialogHeader>
 

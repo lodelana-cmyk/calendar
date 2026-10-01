@@ -163,7 +163,7 @@ export function GenerateItemsDialog({ open, onOpenChange, campaign }: Props) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
-            {step === "input" && "Generate Content Items"}
+            {step === "input" && "Generate content items"}
             {step === "preview" && "Review Drafted Items"}
             {step === "done" && "Items Added"}
           </DialogTitle>
