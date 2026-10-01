@@ -1,22 +1,22 @@
 "use client"
 
 import type { ContentItemWithCampaign } from "@/lib/database.types"
-import { CHANNEL_ICONS, campaignColor } from "@/lib/database.types"
+import { CHANNEL_ICONS } from "@/lib/database.types"
 
 interface Props {
   item: ContentItemWithCampaign
   onClick: () => void
   onDragStart: (e: React.DragEvent) => void
   compact?: boolean
+  /** Dims items that belong to the previous / next month shown around the current one. */
+  muted?: boolean
 }
 
 /**
- * Calendar chip — the whole box is tinted in its campaign's colour so
- * campaigns (and gaps between them) read at a glance. Dashed border =
- * Provisional date; faded = Published.
+ * Calendar chip — solid ink card with white text. A provisional date shows
+ * as a dashed outline instead, and published items are faded.
  */
-export function ContentItemChip({ item, onClick, onDragStart, compact }: Props) {
-  const color = campaignColor(item.campaign_id)
+export function ContentItemChip({ item, onClick, onDragStart, compact, muted }: Props) {
   const isProvisional = item.date_confidence === "Provisional"
 
   return (
@@ -28,17 +28,18 @@ export function ContentItemChip({ item, onClick, onDragStart, compact }: Props) 
       onDragStart={onDragStart}
       onKeyDown={e => { if (e.key === "Enter") onClick() }}
       title={`${item.title} · ${item.campaignTitle} · ${item.status}${isProvisional ? " (Provisional)" : ""}\nDrag to reschedule`}
-      style={{ backgroundColor: `${color}33`, borderColor: `${color}59`, borderLeftColor: color }}
-      className={`rounded-md border border-l-[3px] text-on-surface px-2 py-1.5 text-[11.5px] leading-snug font-medium cursor-grab active:cursor-grabbing transition-shadow select-none hover:shadow-sm ${
-        isProvisional ? "border-dashed" : ""
-      } ${item.status === "Published" ? "opacity-55" : ""} ${compact ? "truncate" : ""}`}
+      className={`rounded-lg px-2.5 py-1.5 text-[11.5px] leading-snug font-medium cursor-grab active:cursor-grabbing select-none transition-opacity ${
+        isProvisional
+          ? "border border-dashed border-on-surface/50 text-on-surface hover:bg-surface-container-low"
+          : "bg-primary text-primary-foreground hover:bg-primary/85"
+      } ${item.status === "Published" || muted ? "opacity-50" : ""} ${compact ? "truncate" : ""}`}
     >
       <span className={`block ${compact ? "truncate" : "line-clamp-2"}`}>{item.title}</span>
       {!compact && (
-        <span className="flex items-center gap-1 mt-0.5 text-on-surface-variant text-[10px]">
+        <span className={`flex items-center gap-1 mt-0.5 text-[10px] ${isProvisional ? "text-on-surface-variant" : "text-primary-foreground/60"}`}>
           <span aria-hidden="true">{CHANNEL_ICONS[item.channel] || ""}</span>
           <span className="truncate">{item.campaignTitle}</span>
-          {isProvisional && <span className="font-semibold uppercase tracking-wide">TBC</span>}
+          {isProvisional && <span className="font-semibold">TBC</span>}
         </span>
       )}
     </div>

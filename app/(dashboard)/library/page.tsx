@@ -6,7 +6,7 @@ import { Search, ExternalLink, Copy, Check } from "lucide-react"
 import { useStore } from "@/lib/store"
 import { ListSkeleton } from "@/components/loading-skeletons"
 import type { CampaignWithItems } from "@/lib/database.types"
-import { CHANNEL_OPTIONS, CHANNEL_ICONS, NO_CAMPAIGN_ID, campaignColor } from "@/lib/database.types"
+import { CHANNEL_OPTIONS, CHANNEL_ICONS, NO_CAMPAIGN_ID } from "@/lib/database.types"
 
 /** Only real web links are rendered as links — never javascript: or other schemes. */
 function isWebUrl(url: string | null | undefined): url is string {
@@ -102,8 +102,7 @@ export default function LibraryPage() {
             return (
               <div
                 key={item.id}
-                style={{ borderLeftColor: campaignColor(item.campaign_id) }}
-                className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-4 py-3 border-l-4 hover:bg-surface-container-low/60 transition-colors"
+                className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-4 py-3 hover:bg-surface-container-low/60 transition-colors"
               >
                 <div className="flex-1 min-w-[220px] flex flex-col gap-0.5">
                   <Link href={`/?item=${item.id}`} className="text-sm font-semibold text-on-surface hover:underline truncate">
@@ -115,8 +114,7 @@ export default function LibraryPage() {
                   </span>
                 </div>
                 <span
-                  className="text-xs font-medium px-2 py-0.5 rounded-md max-w-[200px] truncate text-on-surface"
-                  style={{ backgroundColor: `${campaignColor(item.campaign_id)}33` }}
+                  className="text-xs font-medium px-2.5 py-0.5 rounded-full max-w-[200px] truncate border border-outline-variant text-on-surface"
                 >
                   {c.title}
                 </span>

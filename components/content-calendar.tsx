@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useSearchParams } from "next/navigation"
+import { useIsMobile } from "@/hooks/use-mobile"
 import {
   ChevronLeft, ChevronRight, Plus, CalendarDays, List,
   Sparkles, Download, Columns, SlidersHorizontal
@@ -13,7 +14,7 @@ import type { ContentItemWithCampaign, ItemStatus } from "@/lib/database.types"
 import {
   CHANNEL_ICONS,
   CHANNEL_OPTIONS, MOTION_OPTIONS, STATUS_OPTIONS, PRODUCT_OPTIONS,
-  NO_CAMPAIGN_ID, campaignColor, AUDIENCE_SEGMENTS
+  NO_CAMPAIGN_ID, AUDIENCE_SEGMENTS
 } from "@/lib/database.types"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button, SegmentedControl, buttonCls, cx, fieldSmCls, linkCls } from "@/components/kit"
@@ -59,6 +60,22 @@ function monthGrid(year: number, month: number): (string | null)[][] {
   return weeks
 }
 
+/**
+ * Six full Mon–Sun weeks around the month, filled with real dates from the
+ * previous and next month (like Apple Calendar) so you can see what's coming
+ * up next month without leaving this one.
+ */
+function monthGridWithNeighbours(year: number, month: number): string[][] {
+  const first = new Date(year, month, 1)
+  const col = (first.getDay() + 6) % 7 // Mon=0 … Sun=6
+  const start = new Date(year, month, 1 - col)
+  return Array.from({ length: 6 }, (_, w) =>
+    Array.from({ length: 7 }, (_, d) =>
+      toDateStr(new Date(start.getFullYear(), start.getMonth(), start.getDate() + w * 7 + d)),
+    ),
+  )
+}
+
 /** Full Mon–Sun of the week containing `date` */
 function currentWeekDays(date: Date): (string | null)[] {
   const dow = date.getDay()
@@ -89,7 +106,10 @@ export function ContentCalendar() {
   const today       = new Date()
   const [year, setYear]   = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth())
-  const [view, setView]   = useState<ViewMode>("month")
+  const [selectedView, setView] = useState<ViewMode>("month")
+  // Month/week grids are unreadable at phone width, so phones always get the list.
+  const isMobile = useIsMobile()
+  const view: ViewMode = isMobile ? "list" : selectedView
 
   // week nav for week view
   const [weekAnchor, setWeekAnchor] = useState(today)
@@ -203,7 +223,7 @@ export function ContentCalendar() {
       const d = new Date(weekAnchor)
       d.setDate(d.getDate() - 7)
       setWeekAnchor(d)
-    } else if (view === "month") {
+    } else {
       if (month === 0) { setYear(y => y - 1); setMonth(11) }
       else setMonth(m => m - 1)
     }
@@ -214,7 +234,7 @@ export function ContentCalendar() {
       const d = new Date(weekAnchor)
       d.setDate(d.getDate() + 7)
       setWeekAnchor(d)
-    } else if (view === "month") {
+    } else {
       if (month === 11) { setYear(y => y + 1); setMonth(0) }
       else setMonth(m => m + 1)
     }
@@ -315,10 +335,13 @@ export function ContentCalendar() {
 
   // ── cell renderer ─────────────────────────────────────────────────────────
 
-  const renderCell = (date: string | null, mini = false) => {
+  const renderCell = (date: string | null, mini = false, outside = false) => {
     const isToday   = date === toDateStr(today)
     const isTarget  = date !== null && date === dragOverDate
-    const dayNum    = date ? parseDateStr(date).getDate() : null
+    const parsed    = date ? parseDateStr(date) : null
+    const dayNum    = parsed ? parsed.getDate() : null
+    // Label the 1st of any month with its name ("1 Nov"), as Apple Calendar does
+    const dayLabel  = parsed && dayNum === 1 && !mini ? `1 ${MONTHS[parsed.getMonth()].slice(0, 3)}` : dayNum
     const items     = date ? itemsForDate(date) : []
 
     return (
@@ -326,8 +349,8 @@ export function ContentCalendar() {
         onDragOver={e => { e.preventDefault(); if (date) setDragOverDate(date) }}
         onDragLeave={() => { if (dragOverDate === date) setDragOverDate(null) }}
         onDrop={e => handleDrop(date, e)}
-        className={`flex flex-col gap-1 p-1.5 sm:p-2 transition-colors ${
-          !date ? "bg-surface-container-low/50" : ""
+        className={`flex-1 flex flex-col gap-1 p-1.5 sm:p-2 transition-colors ${
+          !date || outside ? "bg-surface-container-low/40" : ""
         } ${isToday ? "bg-surface-container-lowest" : ""} ${
           isTarget ? "bg-surface-container-low ring-2 ring-inset ring-on-surface/25" : ""
         }`}
@@ -336,9 +359,9 @@ export function ContentCalendar() {
           <div className="flex items-center justify-between mb-0.5">
             <span className={`text-xs font-medium leading-none tabular-nums ${
               isToday
-                ? "bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center"
-                : "text-on-surface-variant"
-            }`}>{dayNum}</span>
+                ? "bg-primary text-primary-foreground min-w-6 h-6 px-1.5 rounded-full flex items-center justify-center"
+                : outside ? "text-on-surface-variant/50" : "text-on-surface-variant"
+            }`}>{dayLabel}</span>
             {!mini && (
               <button
                 onClick={() => openNew(date)}
@@ -356,6 +379,7 @@ export function ContentCalendar() {
               item={item}
               onClick={() => openItem(item)}
               onDragStart={e => handleDragStart(item, e)}
+              muted={outside}
             />
           ))}
         </div>
@@ -366,7 +390,8 @@ export function ContentCalendar() {
   // ── month grid ────────────────────────────────────────────────────────────
 
   const renderMonthGrid = () => {
-    const grid = monthGrid(year, month)
+    const grid = monthGridWithNeighbours(year, month)
+    const monthPrefix = `${year}-${String(month + 1).padStart(2, "0")}`
     return (
       <div className="rounded-xl border border-border overflow-hidden bg-surface-bright">
         {/* weekday headers */}
@@ -380,8 +405,8 @@ export function ContentCalendar() {
         {grid.map((week, wi) => (
           <div key={wi} className="grid grid-cols-7 border-b border-border last:border-b-0 divide-x divide-border">
             {week.map((date, di) => (
-              <div key={di} className="min-h-[110px] group/cell">
-                {renderCell(date)}
+              <div key={di} className="min-h-[110px] group/cell flex flex-col">
+                {renderCell(date, false, !date.startsWith(monthPrefix))}
               </div>
             ))}
           </div>
@@ -414,7 +439,7 @@ export function ContentCalendar() {
         </div>
         <div className="grid grid-cols-7 divide-x divide-border">
           {days.map((date, di) => (
-            <div key={di} className="min-h-[300px] group/cell">
+            <div key={di} className="min-h-[300px] group/cell flex flex-col">
               {renderCell(date)}
             </div>
           ))}
@@ -461,8 +486,7 @@ export function ContentCalendar() {
               {items.map(item => (
                 <div
                   key={item.id}
-                  style={{ borderLeftColor: campaignColor(item.campaign_id) }}
-                  className="w-full flex items-center gap-3 px-4 border-b border-l-4 border-border last:border-b-0 hover:bg-surface-container-low/60 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 border-b border-border last:border-b-0 hover:bg-surface-container-low/60 transition-colors"
                 >
                   {isEditor && (
                     <input
@@ -477,7 +501,13 @@ export function ContentCalendar() {
                     onClick={() => openItem(item)}
                     className="flex-1 min-w-0 flex items-center gap-3 py-3 text-left"
                   >
-                    <span className="text-sm font-medium text-on-surface flex-1 truncate">{item.title}</span>
+                    <span className="flex-1 min-w-0">
+                      <span className="block text-sm font-medium text-on-surface truncate">{item.title}</span>
+                      {/* On phones the extra columns are hidden, so show them as a sub-line */}
+                      <span className="sm:hidden block text-xs text-on-surface-variant truncate">
+                        {item.campaignTitle} · {CHANNEL_ICONS[item.channel] || ""} {item.channel} · {item.status}
+                      </span>
+                    </span>
                     {(item.audience_segments ?? []).length > 0 && (
                       <span className="hidden md:flex gap-1 flex-shrink-0">
                         {item.audience_segments.slice(0, 2).map(seg => (
@@ -489,14 +519,11 @@ export function ContentCalendar() {
                       </span>
                     )}
                     <span className="text-xs text-on-surface-variant flex-shrink-0">{item.publish_date ? parseDateStr(item.publish_date).toLocaleDateString("en-GB",{day:"numeric",month:"short"}) : ""}</span>
-                    <span
-                      className="text-xs font-medium px-2 py-0.5 rounded-md flex-shrink-0 max-w-[180px] truncate text-on-surface"
-                      style={{ backgroundColor: `${campaignColor(item.campaign_id)}33` }}
-                    >
+                    <span className="hidden sm:inline text-xs font-medium px-2.5 py-0.5 rounded-full flex-shrink-0 max-w-[180px] truncate border border-outline-variant text-on-surface">
                       {item.campaignTitle}
                     </span>
-                    <span className="text-xs text-on-surface-variant flex-shrink-0 w-20">{item.status}</span>
-                    <span className="text-xs text-on-surface-variant flex-shrink-0">{CHANNEL_ICONS[item.channel] || ""} {item.channel}</span>
+                    <span className="hidden sm:inline text-xs text-on-surface-variant flex-shrink-0 w-20">{item.status}</span>
+                    <span className="hidden sm:inline text-xs text-on-surface-variant flex-shrink-0">{CHANNEL_ICONS[item.channel] || ""} {item.channel}</span>
                   </button>
                 </div>
               ))}
@@ -569,16 +596,19 @@ export function ContentCalendar() {
           </button>
         </div>
 
-        <SegmentedControl
-          ariaLabel="Calendar view"
-          value={view}
-          onChange={setView}
-          options={[
-            { value: "month", label: "Month", icon: <CalendarDays className="h-3.5 w-3.5" /> },
-            { value: "week",  label: "Week",  icon: <Columns className="h-3.5 w-3.5" /> },
-            { value: "list",  label: "List",  icon: <List className="h-3.5 w-3.5" /> },
-          ]}
-        />
+        {/* Phones always show the list, so the switcher is desktop-only */}
+        <div className="hidden md:block">
+          <SegmentedControl
+            ariaLabel="Calendar view"
+            value={view}
+            onChange={setView}
+            options={[
+              { value: "month", label: "Month", icon: <CalendarDays className="h-3.5 w-3.5" /> },
+              { value: "week",  label: "Week",  icon: <Columns className="h-3.5 w-3.5" /> },
+              { value: "list",  label: "List",  icon: <List className="h-3.5 w-3.5" /> },
+            ]}
+          />
+        </div>
 
         {/* Filters — collapsed into one popover to keep the header to a single row */}
         <Popover>

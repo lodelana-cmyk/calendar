@@ -7,7 +7,7 @@ import { useRefreshData } from "@/components/data-provider"
 import { updateCampaignClient, deleteCampaignClient, createContentItemClient, moveContentItemsClient } from "@/lib/data-client"
 import type { CampaignWithItems, ContentItemWithCampaign, CampaignMotion, CampaignType } from "@/lib/database.types"
 import {
-  MOTION_OPTIONS, TYPE_OPTIONS, PRODUCT_OPTIONS, campaignColor,
+  MOTION_OPTIONS, TYPE_OPTIONS, PRODUCT_OPTIONS,
   CHANNEL_ICONS, STATUS_COLORS, NO_CAMPAIGN_ID
 } from "@/lib/database.types"
 import { ContentItemDialog } from "@/components/content-item-dialog"
@@ -107,7 +107,6 @@ export function CampaignDetailSheet({ campaign, onClose }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between gap-3 px-6 py-4 border-b border-border sticky top-0 bg-background/95 backdrop-blur z-10">
           <div className="flex items-center gap-3 min-w-0">
-            <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: campaignColor(campaign.id) }} aria-hidden="true" />
             <h2 className="text-[22px] text-on-surface truncate">{title || "Campaign"}</h2>
           </div>
           <div className="flex items-center gap-1">
