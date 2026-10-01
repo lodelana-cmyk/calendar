@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react"
 import { X, FileText, Table2, Download } from "lucide-react"
 import type { ContentItemWithCampaign } from "@/lib/database.types"
-import { STATUS_COLORS, campaignColor } from "@/lib/database.types"
+import { STATUS_COLORS } from "@/lib/database.types"
 
 // ---- date helpers ----
 function toDS(d: Date) {
@@ -82,8 +82,7 @@ function buildHtml(items: ContentItemWithCampaign[], start: Date, end: Date, lab
       const day = parseDS(date).getDate()
       const dayItems = byDate[date] || []
       const tasksHtml = dayItems.map(it => {
-        const accent = campaignColor(it.campaign_id)
-        return `<div class="chip" style="border-left:3px solid ${accent}">
+        return `<div class="chip">
           <span class="dot" style="background:${statusDot(it.status)}"></span>
           <span class="lbl">${escape(it.title)}</span>
           ${it.assignee ? `<span class="who">${escape(it.assignee.full_name.split(" ")[0])}</span>` : ""}

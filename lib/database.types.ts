@@ -283,30 +283,6 @@ export const ICON_COLORS = [
   "bg-orange-500", "bg-pink-500",    "bg-slate-600",
 ]
 
-// Calendar colour per campaign. Derived from the id rather than the stored
-// icon_color, which is a Tailwind class that most campaigns leave at the
-// same default — so it can't tell campaigns apart.
-// Muted, earthy hues so campaign tints sit quietly on the off-white UI.
-const CAMPAIGN_PALETTE = [
-  "#6f8bb3", // dusty blue
-  "#7f9e83", // sage
-  "#c07f63", // terracotta
-  "#c4a052", // ochre
-  "#9a7fa3", // plum
-  "#6c9e9c", // teal
-  "#b98293", // rose
-  "#9ba065", // olive
-  "#8a87b4", // periwinkle
-  "#b0916f", // sand
-]
-const NO_CAMPAIGN_COLOR = "#a8a5a0"
-
-export function campaignColor(campaignId: string | null | undefined): string {
-  if (!campaignId || campaignId === NO_CAMPAIGN_ID) return NO_CAMPAIGN_COLOR
-  let hash = 0
-  for (let i = 0; i < campaignId.length; i++) hash = (hash * 31 + campaignId.charCodeAt(i)) | 0
-  return CAMPAIGN_PALETTE[Math.abs(hash) % CAMPAIGN_PALETTE.length]
-}
 
 export function parseDateString(dateStr: string): Date {
   const [y, m, d] = dateStr.split("-").map(Number)
