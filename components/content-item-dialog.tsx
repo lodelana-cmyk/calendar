@@ -20,7 +20,7 @@ import type {
 } from "@/lib/database.types"
 import {
   STATUS_COLORS, STATUS_OPTIONS, CHANNEL_OPTIONS, FORMAT_OPTIONS, CONTRIBUTOR_ROLE_OPTIONS,
-  NO_CAMPAIGN_ID, AUDIENCE_SEGMENT_GROUPS,
+  NO_CAMPAIGN_ID, AUDIENCE_SEGMENT_GROUPS, campaignColor,
 } from "@/lib/database.types"
 
 const NEW_CAMPAIGN_OPTION = "__new_campaign__"
@@ -224,6 +224,7 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
             <div className="flex-1 min-w-0">
               {!isNew && (
                 <p className="flex items-center gap-1.5 text-[13px] text-on-surface-variant mb-2 truncate">
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: campaignColor(item.campaign_id) }} aria-hidden="true" />
                   {item.campaignTitle}
                 </p>
               )}

@@ -6,7 +6,7 @@ import { Search, ExternalLink, Copy, Check } from "lucide-react"
 import { useStore } from "@/lib/store"
 import { ListSkeleton } from "@/components/loading-skeletons"
 import type { CampaignWithItems } from "@/lib/database.types"
-import { CHANNEL_OPTIONS, CHANNEL_ICONS, NO_CAMPAIGN_ID } from "@/lib/database.types"
+import { CHANNEL_OPTIONS, CHANNEL_ICONS, NO_CAMPAIGN_ID, campaignColor } from "@/lib/database.types"
 
 /** Only real web links are rendered as links — never javascript: or other schemes. */
 function isWebUrl(url: string | null | undefined): url is string {
@@ -114,9 +114,10 @@ export default function LibraryPage() {
                   </span>
                 </div>
                 <span
-                  className="text-xs font-medium px-2.5 py-0.5 rounded-full max-w-[200px] truncate border border-outline-variant text-on-surface"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-0.5 rounded-full max-w-[220px] border border-outline-variant text-on-surface"
                 >
-                  {c.title}
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: campaignColor(item.campaign_id) }} aria-hidden="true" />
+                  <span className="truncate">{c.title}</span>
                 </span>
                 {(item.audience_segments ?? []).length > 0 && (
                   <span className="flex flex-wrap gap-1">
