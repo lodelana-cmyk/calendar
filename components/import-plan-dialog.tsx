@@ -253,7 +253,7 @@ export function ImportPlanDialog({ open, onOpenChange, calendarYear, calendarMon
         </DialogHeader>
 
         {error && (
-          <div className="p-3 bg-red-50 dark:bg-red-950/30 rounded-xl text-sm text-red-600 font-medium">{error}</div>
+          <div className="p-3 bg-error-container rounded-xl text-sm text-error font-medium">{error}</div>
         )}
 
         {step === "paste" && (
@@ -264,7 +264,7 @@ export function ImportPlanDialog({ open, onOpenChange, calendarYear, calendarMon
             </p>
 
             <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wide">This plan is</span>
+              <span className="text-[13px] text-on-surface-variant">This plan is</span>
               <div className="grid grid-cols-2 gap-2">
                 <button type="button" onClick={() => setMode("single")} className={segmentCls(mode === "single")}>
                   One campaign
@@ -278,7 +278,7 @@ export function ImportPlanDialog({ open, onOpenChange, calendarYear, calendarMon
             {mode === "single" && (
               <div className="flex flex-col gap-3 p-3 bg-surface-container-low rounded-xl border border-outline-variant">
                 <div className="flex flex-col gap-1.5">
-                  <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wide">Campaign</span>
+                  <span className="text-[13px] text-on-surface-variant">Campaign</span>
                   <select value={targetCampaignId} onChange={e => setTargetCampaignId(e.target.value)} className={selectCls}>
                     <option value="">+ Create new campaign</option>
                     {realCampaigns.length > 0 && (
@@ -309,7 +309,7 @@ export function ImportPlanDialog({ open, onOpenChange, calendarYear, calendarMon
             <button
               onClick={handleParse}
               disabled={isParsing || text.trim().length < 10}
-              className="w-full py-3 px-4 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full py-3 px-4 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {isParsing ? (
                 <><Loader2 className="h-4 w-4 animate-spin" /> Parsing your plan…</>
@@ -346,7 +346,7 @@ export function ImportPlanDialog({ open, onOpenChange, calendarYear, calendarMon
                     {groupBySection(camp.items).map(([section, items]) => (
                       <div key={section}>
                         {section !== NO_SECTION && (
-                          <div className="px-4 pt-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-on-surface-variant/70">
+                          <div className="px-4 pt-3 pb-1 text-xs text-on-surface-variant">
                             {section}
                           </div>
                         )}
@@ -366,11 +366,11 @@ export function ImportPlanDialog({ open, onOpenChange, calendarYear, calendarMon
             </div>
             <div className="flex gap-3">
               <button onClick={() => setStep("paste")} disabled={isApplying}
-                className="flex items-center justify-center gap-2 px-4 py-3 bg-surface-container-high rounded-xl text-sm font-semibold text-on-surface-variant hover:bg-surface-container-highest transition-colors disabled:opacity-50">
+                className="flex items-center justify-center gap-2 px-4 py-2.5 border border-outline-variant rounded-full text-sm font-medium text-on-surface-variant hover:bg-surface-container-low transition-colors disabled:opacity-50">
                 <ArrowLeft className="h-4 w-4" /> Back
               </button>
               <button onClick={handleApply} disabled={isApplying}
-                className="flex-1 py-3 px-4 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                className="flex-1 py-2.5 px-4 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/85 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
                 {isApplying ? (
                   <><Loader2 className="h-4 w-4 animate-spin" /> Importing {totalItems} items…</>
                 ) : `Import ${totalItems} Items`}
@@ -381,14 +381,14 @@ export function ImportPlanDialog({ open, onOpenChange, calendarYear, calendarMon
 
         {step === "done" && (
           <div className="flex flex-col items-center gap-4 py-6 text-center">
-            <div className="h-14 w-14 rounded-full bg-emerald-100 flex items-center justify-center">
-              <Check className="h-7 w-7 text-emerald-600" />
+            <div className="h-14 w-14 rounded-full bg-surface-container-low flex items-center justify-center">
+              <Check className="h-7 w-7 text-on-surface" />
             </div>
             <p className="text-sm text-on-surface-variant">
               <strong className="text-on-surface">{importedCount} items</strong> added to your calendar.
             </p>
             <button onClick={() => handleOpenChange(false)}
-              className="px-6 py-3 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors">
+              className="px-6 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/85 transition-colors">
               View Calendar
             </button>
           </div>

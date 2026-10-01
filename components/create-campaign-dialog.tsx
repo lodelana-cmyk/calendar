@@ -55,7 +55,7 @@ export function CreateCampaignDialog({ open, onOpenChange, initialTitle, initial
 
   return (
     <>
-      <div className={`fixed inset-0 bg-black/40 ${stacked ? "z-[60]" : "z-50"}`} onClick={() => onOpenChange(false)} />
+      <div className={`fixed inset-0 bg-black/30 backdrop-blur-[2px] ${stacked ? "z-[60]" : "z-50"}`} onClick={() => onOpenChange(false)} />
       <div className={`fixed inset-0 ${stacked ? "z-[60]" : "z-50"} flex items-center justify-center p-4 pointer-events-none`}>
         <div className="bg-background rounded-2xl border border-border shadow-2xl w-full max-w-md pointer-events-auto flex flex-col gap-6 p-6">
           <div className="flex items-center justify-between">
@@ -67,7 +67,7 @@ export function CreateCampaignDialog({ open, onOpenChange, initialTitle, initial
 
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wide">Title *</label>
+              <label className="text-[13px] text-on-surface-variant">Title *</label>
               <input
                 autoFocus
                 value={title}
@@ -79,7 +79,7 @@ export function CreateCampaignDialog({ open, onOpenChange, initialTitle, initial
 
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wide">Type *</label>
+                <label className="text-[13px] text-on-surface-variant">Type *</label>
                 <select
                   value={type}
                   onChange={e => setType(e.target.value as CampaignType)}
@@ -90,7 +90,7 @@ export function CreateCampaignDialog({ open, onOpenChange, initialTitle, initial
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wide">Motion *</label>
+                <label className="text-[13px] text-on-surface-variant">Motion *</label>
                 <select
                   value={motion}
                   onChange={e => setMotion(e.target.value as CampaignMotion)}
@@ -102,7 +102,7 @@ export function CreateCampaignDialog({ open, onOpenChange, initialTitle, initial
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wide">Product</label>
+              <label className="text-[13px] text-on-surface-variant">Product</label>
               <select
                 value={product}
                 onChange={e => setProduct(e.target.value)}
@@ -114,7 +114,7 @@ export function CreateCampaignDialog({ open, onOpenChange, initialTitle, initial
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wide">Objective</label>
+              <label className="text-[13px] text-on-surface-variant">Objective</label>
               <textarea
                 value={objective}
                 onChange={e => setObjective(e.target.value)}
@@ -125,7 +125,7 @@ export function CreateCampaignDialog({ open, onOpenChange, initialTitle, initial
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wide">Completion date</label>
+              <label className="text-[13px] text-on-surface-variant">Completion date</label>
               <input
                 type="date"
                 value={endDate}
@@ -135,16 +135,16 @@ export function CreateCampaignDialog({ open, onOpenChange, initialTitle, initial
             </div>
           </div>
 
-          {error && <p className="text-xs text-red-500">{error}</p>}
+          {error && <p className="text-xs text-error">{error}</p>}
 
           <div className="flex justify-end gap-3">
-            <button onClick={() => onOpenChange(false)} className="px-4 py-2 rounded-lg text-sm font-semibold border border-outline-variant hover:bg-surface-container-high transition-colors">
+            <button onClick={() => onOpenChange(false)} className="px-4 py-2 rounded-full text-sm font-medium border border-outline-variant hover:bg-surface-container-low transition-colors">
               Cancel
             </button>
             <button
               onClick={handleCreate}
               disabled={saving}
-              className="px-4 py-2 rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-60 transition-colors"
+              className="px-4 py-2 rounded-full text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/85 disabled:opacity-60 transition-colors"
             >
               {saving ? "Creating…" : "Create Campaign"}
             </button>

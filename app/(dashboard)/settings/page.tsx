@@ -16,7 +16,7 @@ export default function SettingsPage() {
   return (
     <div className="px-4 sm:px-8 lg:px-10 py-6 flex flex-col gap-8 max-w-3xl">
       <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-extrabold text-on-surface tracking-tight">Settings</h1>
+        <h1 className="text-[28px] font-semibold text-on-surface tracking-tight">Settings</h1>
         <p className="text-sm text-on-surface-variant font-medium">Configure your workspace</p>
       </div>
 
@@ -68,7 +68,7 @@ export default function SettingsPage() {
       <div className="flex justify-end">
         <button
           onClick={handleSave}
-          className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors"
+          className="flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/85 transition-colors"
         >
           {saved ? <><Check className="h-4 w-4" /> Saved</> : "Save changes"}
         </button>
@@ -92,7 +92,7 @@ function Section({ title, description, children }: { title: string; description?
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wide">{label}</label>
+      <label className="text-[13px] text-on-surface-variant">{label}</label>
       {children}
     </div>
   )

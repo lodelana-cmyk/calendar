@@ -62,7 +62,7 @@ export default function LibraryPage() {
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-4 flex flex-col gap-4">
       <div className="flex flex-col gap-0.5">
-        <h1 className="text-2xl font-extrabold text-on-surface tracking-tight">Library</h1>
+        <h1 className="text-[24px] font-semibold text-on-surface tracking-tight">Library</h1>
         <p className="text-sm text-on-surface-variant">
           Published and linked content, to find and reuse across teams. Anything with a Live URL shows up here.
         </p>
@@ -138,9 +138,9 @@ export default function LibraryPage() {
                   </a>
                   <button
                     onClick={() => copy(item.id, url)}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-outline-variant hover:bg-surface-container-high transition-colors"
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium border border-outline-variant hover:bg-surface-container-low transition-colors"
                   >
-                    {copiedId === item.id ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                    {copiedId === item.id ? <Check className="h-3.5 w-3.5 text-on-surface" /> : <Copy className="h-3.5 w-3.5" />}
                     {copiedId === item.id ? "Copied" : "Copy link"}
                   </button>
                 </div>

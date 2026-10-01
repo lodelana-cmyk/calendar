@@ -192,7 +192,7 @@ export default function ProfilePage() {
     <div className="px-12 py-6 flex flex-col gap-8 max-w-4xl">
       {/* Header */}
       <div className="flex flex-col gap-1">
-        <h1 className="text-4xl font-extrabold text-on-surface headline">
+        <h1 className="text-[34px] font-semibold text-on-surface">
           Your Profile
         </h1>
         <p className="text-on-surface-variant font-medium">
@@ -222,7 +222,7 @@ export default function ProfilePage() {
             <button 
               onClick={handleAvatarClick}
               disabled={isUploadingAvatar}
-              className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+              className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:opacity-90 transition-opacity disabled:opacity-50"
             >
               <Camera className="h-4 w-4" />
             </button>
@@ -235,7 +235,7 @@ export default function ProfilePage() {
             />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-on-surface headline">{fullName || "Your Name"}</h2>
+            <h2 className="text-[24px] font-semibold text-on-surface">{fullName || "Your Name"}</h2>
             <p className="text-primary font-medium">{role || "Role"}</p>
             <p className="text-sm text-on-surface-variant mt-1">{email || "Loading..."}</p>
           </div>
@@ -335,7 +335,7 @@ export default function ProfilePage() {
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="px-8 py-3 bg-gradient-to-br from-primary to-primary-container text-white rounded-full font-semibold text-sm flex items-center gap-2 shadow-lg shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50"
+            className="px-8 py-2.5 bg-gradient-to-br from-primary to-primary-container text-white rounded-full font-medium text-sm flex items-center gap-2 shadow-lg shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50"
           >
             {isSaving ? (
               <>
@@ -375,7 +375,7 @@ export default function ProfilePage() {
             </div>
             <button
               onClick={() => setShowPasswordForm(!showPasswordForm)}
-              className="px-6 py-2.5 bg-surface-container-low text-on-surface rounded-full font-semibold text-sm hover:bg-surface-container-high transition-colors"
+              className="px-6 py-2.5 bg-surface-container-low text-on-surface rounded-full font-medium text-sm hover:bg-surface-container-low transition-colors"
             >
               {showPasswordForm ? "Cancel" : "Change Password"}
             </button>
@@ -410,7 +410,7 @@ export default function ProfilePage() {
               <button
                 onClick={handleChangePassword}
                 disabled={isChangingPassword}
-                className="self-end px-6 py-2.5 bg-primary text-white rounded-full font-semibold text-sm hover:opacity-90 transition-opacity flex items-center gap-2 disabled:opacity-50"
+                className="self-end px-6 py-2.5 bg-primary text-primary-foreground rounded-full font-medium text-sm hover:opacity-90 transition-opacity flex items-center gap-2 disabled:opacity-50"
               >
                 {isChangingPassword ? (
                   <>
@@ -438,7 +438,7 @@ export default function ProfilePage() {
             <button
               onClick={handleSignOut}
               disabled={isSigningOut}
-              className="px-6 py-2.5 bg-error/10 text-error rounded-full font-semibold text-sm hover:bg-error/20 transition-colors flex items-center gap-2 disabled:opacity-50"
+              className="px-6 py-2.5 bg-error/10 text-error rounded-full font-medium text-sm hover:bg-error/20 transition-colors flex items-center gap-2 disabled:opacity-50"
             >
               <LogOut className="h-4 w-4" />
               {isSigningOut ? "Signing out..." : "Sign Out"}

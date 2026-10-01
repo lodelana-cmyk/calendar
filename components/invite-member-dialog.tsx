@@ -112,14 +112,14 @@ export function InviteMemberDialog({ open, onOpenChange }: InviteMemberDialogPro
             </div>
             <button
               onClick={copyCredentials}
-              className="w-full py-3 px-4 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+              className="w-full py-2.5 px-4 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/85 transition-colors flex items-center justify-center gap-2"
             >
               {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
               {copied ? "Copied" : "Copy Credentials"}
             </button>
             <button
               onClick={() => handleOpenChange(false)}
-              className="w-full py-3 px-4 bg-surface-container-high rounded-xl text-sm font-semibold text-on-surface-variant hover:bg-surface-container-highest transition-colors"
+              className="w-full py-2.5 px-4 border border-outline-variant rounded-full text-sm font-medium text-on-surface-variant hover:bg-surface-container-low transition-colors"
             >
               Done
             </button>
@@ -127,7 +127,7 @@ export function InviteMemberDialog({ open, onOpenChange }: InviteMemberDialogPro
         ) : (
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wide">Full Name</label>
+              <label className="text-[13px] text-on-surface-variant">Full Name</label>
               <input
                 type="text"
                 value={fullName}
@@ -137,7 +137,7 @@ export function InviteMemberDialog({ open, onOpenChange }: InviteMemberDialogPro
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wide">Email</label>
+              <label className="text-[13px] text-on-surface-variant">Email</label>
               <input
                 type="email"
                 value={email}
@@ -147,7 +147,7 @@ export function InviteMemberDialog({ open, onOpenChange }: InviteMemberDialogPro
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wide">Role</label>
+              <label className="text-[13px] text-on-surface-variant">Role</label>
               <input
                 type="text"
                 value={role}
@@ -157,7 +157,7 @@ export function InviteMemberDialog({ open, onOpenChange }: InviteMemberDialogPro
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wide">Temporary Password</label>
+              <label className="text-[13px] text-on-surface-variant">Temporary Password</label>
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -180,7 +180,7 @@ export function InviteMemberDialog({ open, onOpenChange }: InviteMemberDialogPro
             <button
               onClick={handleInvite}
               disabled={isInviting || !fullName.trim() || !email.trim()}
-              className="w-full py-3 px-4 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full py-2.5 px-4 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/85 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {isInviting ? (
                 <>

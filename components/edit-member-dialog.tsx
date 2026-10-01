@@ -122,7 +122,7 @@ export function EditMemberDialog({ member, open, onOpenChange, onSaved }: EditMe
               <button 
                 onClick={handleAvatarClick}
                 disabled={isUploadingAvatar}
-                className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+                className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:opacity-90 transition-opacity disabled:opacity-50"
               >
                 <Camera className="h-4 w-4" />
               </button>
@@ -139,7 +139,7 @@ export function EditMemberDialog({ member, open, onOpenChange, onSaved }: EditMe
           {/* Form Fields */}
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wide">Full Name</label>
+              <label className="text-[13px] text-on-surface-variant">Full Name</label>
               <input
                 type="text"
                 value={fullName}
@@ -150,7 +150,7 @@ export function EditMemberDialog({ member, open, onOpenChange, onSaved }: EditMe
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wide">Role</label>
+              <label className="text-[13px] text-on-surface-variant">Role</label>
               <select
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
@@ -179,7 +179,7 @@ export function EditMemberDialog({ member, open, onOpenChange, onSaved }: EditMe
               type="button"
               onClick={() => onOpenChange(false)}
               disabled={isSaving}
-              className="flex-1 px-4 py-3 bg-surface-container-high rounded-xl text-sm font-semibold text-on-surface-variant hover:bg-surface-container-highest transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2.5 border border-outline-variant rounded-full text-sm font-medium text-on-surface-variant hover:bg-surface-container-low transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               <X className="h-4 w-4" />
               Cancel
@@ -187,7 +187,7 @@ export function EditMemberDialog({ member, open, onOpenChange, onSaved }: EditMe
             <button
               onClick={handleSave}
               disabled={isSaving || isUploadingAvatar}
-              className="flex-1 px-4 py-3 bg-primary rounded-xl text-sm font-semibold text-on-primary hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2.5 bg-primary rounded-full text-sm font-medium text-primary-foreground hover:bg-primary/85 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {isSaving ? (
                 <>

@@ -7,10 +7,17 @@ import { useRefreshData } from "@/components/data-provider"
 import { updateCampaignClient, deleteCampaignClient, createContentItemClient, moveContentItemsClient } from "@/lib/data-client"
 import type { CampaignWithItems, ContentItemWithCampaign, CampaignMotion, CampaignType } from "@/lib/database.types"
 import {
-  MOTION_ACCENTS, MOTION_OPTIONS, TYPE_OPTIONS, PRODUCT_OPTIONS,
+  MOTION_OPTIONS, TYPE_OPTIONS, PRODUCT_OPTIONS, campaignColor,
   CHANNEL_ICONS, STATUS_COLORS, NO_CAMPAIGN_ID
 } from "@/lib/database.types"
 import { ContentItemDialog } from "@/components/content-item-dialog"
+import { Button, Field, OptionCard, Section, SegmentedControl, fieldCls, textareaCls } from "@/components/kit"
+
+const TYPE_DESCRIPTIONS: Record<CampaignType, string> = {
+  Pillar:      "A big strategic bet.",
+  Launch:      "A product or feature launch.",
+  "Always-on": "Recurring, evergreen content.",
+}
 import { GenerateItemsDialog } from "@/components/generate-items-dialog"
 
 interface Props {
@@ -41,7 +48,6 @@ export function CampaignDetailSheet({ campaign, onClose }: Props) {
   const [moving,      setMoving]      = useState(false)
   const [moveError,   setMoveError]   = useState("")
 
-  const motionAccent = MOTION_ACCENTS[motion] || "#94a3b8"
   const items        = campaign.items || []
   const allSelected  = items.length > 0 && selectedIds.size === items.length
   const someSelected = selectedIds.size > 0
@@ -94,108 +100,80 @@ export function CampaignDetailSheet({ campaign, onClose }: Props) {
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/40 z-40" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/30 z-40 backdrop-blur-[2px]" onClick={onClose} />
 
       {/* Sheet */}
       <div className="fixed right-0 top-0 h-full w-full max-w-xl bg-background border-l border-border z-50 flex flex-col shadow-2xl overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border sticky top-0 bg-background z-10">
+        <div className="flex items-center justify-between gap-3 px-6 py-4 border-b border-border sticky top-0 bg-background/95 backdrop-blur z-10">
           <div className="flex items-center gap-3 min-w-0">
-            <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: motionAccent }} aria-hidden="true" />
-            <h2 className="text-lg font-bold text-on-surface truncate">{title || "Campaign"}</h2>
+            <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: campaignColor(campaign.id) }} aria-hidden="true" />
+            <h2 className="text-[22px] text-on-surface truncate">{title || "Campaign"}</h2>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setConfirmDel(true)}
-              className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors"
-            >
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" onClick={() => setConfirmDel(true)} aria-label="Delete campaign" className="hover:text-error hover:bg-error-container">
               <Trash2 className="h-4 w-4" />
-            </button>
-            <button onClick={onClose} className="p-2 hover:bg-surface-container-high rounded-lg transition-colors">
+            </Button>
+            <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close">
               <X className="h-5 w-5" />
-            </button>
+            </Button>
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col gap-6 p-6">
-          {/* Fields */}
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wide">Title</label>
-              <input
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface-container text-on-surface text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary"
+        <div className="flex-1 flex flex-col px-6">
+          {/* Details */}
+          <Section title="Details">
+            <Field label="Title">
+              <input value={title} onChange={e => setTitle(e.target.value)} className={fieldCls} />
+            </Field>
+
+            <Field label="Type">
+              <div className="grid grid-cols-3 gap-2">
+                {TYPE_OPTIONS.map(t => (
+                  <OptionCard
+                    key={t}
+                    selected={type === t}
+                    onClick={() => setType(t)}
+                    title={t}
+                    description={TYPE_DESCRIPTIONS[t]}
+                  />
+                ))}
+              </div>
+            </Field>
+
+            <Field label="Motion">
+              <SegmentedControl
+                ariaLabel="Motion"
+                value={motion}
+                onChange={setMotion}
+                options={MOTION_OPTIONS.map(m => ({ value: m, label: m }))}
+                className="self-start"
               />
-            </div>
+            </Field>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wide">Type</label>
-                <select
-                  value={type}
-                  onChange={e => setType(e.target.value as CampaignType)}
-                  className="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface-container text-on-surface text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  {TYPE_OPTIONS.map(t => <option key={t}>{t}</option>)}
-                </select>
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wide">Motion</label>
-                <select
-                  value={motion}
-                  onChange={e => setMotion(e.target.value as CampaignMotion)}
-                  className="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface-container text-on-surface text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  {MOTION_OPTIONS.map(m => <option key={m}>{m}</option>)}
-                </select>
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wide">Product</label>
-                <select
-                  value={product}
-                  onChange={e => setProduct(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface-container text-on-surface text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
-                >
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field label="Product">
+                <select value={product} onChange={e => setProduct(e.target.value)} className={fieldCls}>
                   <option value="">None</option>
                   {PRODUCT_OPTIONS.map(p => <option key={p}>{p}</option>)}
                 </select>
-              </div>
+              </Field>
+              <Field label="Completion date">
+                <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className={fieldCls} />
+              </Field>
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wide">Completion date</label>
-              <input
-                type="date"
-                value={endDate}
-                onChange={e => setEndDate(e.target.value)}
-                className="w-full sm:w-56 px-3 py-2 rounded-lg border border-outline-variant bg-surface-container text-on-surface text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </div>
+            <Field label="Objective">
+              <textarea value={objective} onChange={e => setObjective(e.target.value)} rows={3} className={textareaCls} />
+            </Field>
 
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wide">Objective</label>
-              <textarea
-                value={objective}
-                onChange={e => setObjective(e.target.value)}
-                rows={3}
-                className="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface-container text-on-surface text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </div>
-
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="self-start px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:bg-primary/90 disabled:opacity-60 transition-colors"
-            >
+            <Button onClick={handleSave} disabled={saving} className="self-start">
               {saving ? "Saving…" : "Save changes"}
-            </button>
-          </div>
+            </Button>
+          </Section>
 
           {/* Content items */}
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 py-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 {isEditor && items.length > 0 && (
@@ -208,7 +186,7 @@ export function CampaignDetailSheet({ campaign, onClose }: Props) {
                     aria-label="Select all items"
                   />
                 )}
-                <h3 className="text-sm font-bold text-on-surface">Content Items ({items.length})</h3>
+                <h3 className="text-[22px] text-on-surface">Content items <span className="text-on-surface-variant font-normal text-base tabular-nums">{items.length}</span></h3>
               </div>
               {isEditor && (
                 <div className="flex items-center gap-3">
@@ -287,18 +265,18 @@ export function CampaignDetailSheet({ campaign, onClose }: Props) {
                 <button
                   onClick={handleBulkMove}
                   disabled={moving}
-                  className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                  className="px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/85 disabled:opacity-50 transition-colors"
                 >
                   {moving ? "Moving…" : "Move"}
                 </button>
                 <button
                   onClick={() => setSelectedIds(new Set())}
                   disabled={moving}
-                  className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-on-surface-variant hover:bg-surface-container-highest transition-colors"
+                  className="px-2.5 py-1.5 rounded-full text-xs font-medium text-on-surface-variant hover:bg-surface-container-highest transition-colors"
                 >
                   Clear
                 </button>
-                {moveError && <span className="text-xs text-red-600 font-medium w-full">{moveError}</span>}
+                {moveError && <span className="text-xs text-error font-medium w-full">{moveError}</span>}
               </div>
             )}
           </div>
@@ -306,13 +284,13 @@ export function CampaignDetailSheet({ campaign, onClose }: Props) {
 
         {/* Delete confirm */}
         {confirmDel && (
-          <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/50 p-4">
+          <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/30 p-4 backdrop-blur-[2px]">
             <div className="bg-background rounded-2xl border border-border p-6 max-w-sm w-full flex flex-col gap-4 shadow-2xl">
               <h3 className="text-base font-bold text-on-surface">Delete campaign?</h3>
               <p className="text-sm text-on-surface-variant">This will permanently delete &ldquo;{campaign.title}&rdquo; and all its content items. This cannot be undone.</p>
               <div className="flex justify-end gap-3">
-                <button onClick={() => setConfirmDel(false)} className="px-4 py-2 rounded-lg text-sm font-semibold border border-outline-variant hover:bg-surface-container-high transition-colors">Cancel</button>
-                <button onClick={handleDelete} className="px-4 py-2 rounded-lg text-sm font-semibold bg-red-600 text-white hover:bg-red-700 transition-colors">Delete</button>
+                <button onClick={() => setConfirmDel(false)} className="px-4 py-2 rounded-full text-sm font-medium border border-outline-variant hover:bg-surface-container-low transition-colors">Cancel</button>
+                <button onClick={handleDelete} className="px-4 py-2 rounded-full text-sm font-medium bg-error text-on-error hover:bg-error/90 transition-colors">Delete</button>
               </div>
             </div>
           </div>

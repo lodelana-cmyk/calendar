@@ -102,7 +102,7 @@ export function InboxView({ initialIdeas }: { initialIdeas: IdeaWithCreator[] })
           <button
             onClick={handleAdd}
             disabled={!title.trim() || adding}
-            className="flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors flex-shrink-0"
+            className="flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/85 disabled:opacity-50 transition-colors flex-shrink-0"
           >
             <Send className="h-3.5 w-3.5" />
             {adding ? "Adding…" : "Add"}
@@ -149,7 +149,7 @@ export function InboxView({ initialIdeas }: { initialIdeas: IdeaWithCreator[] })
                   <button
                     onClick={() => setPromoteIdea(idea)}
                     disabled={busyId === idea.id}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-outline-variant hover:bg-surface-container-high transition-colors disabled:opacity-50"
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium border border-outline-variant hover:bg-surface-container-low transition-colors disabled:opacity-50"
                   >
                     <Megaphone className="h-3.5 w-3.5 text-primary" />
                     Promote to campaign
@@ -157,7 +157,7 @@ export function InboxView({ initialIdeas }: { initialIdeas: IdeaWithCreator[] })
                   <button
                     onClick={() => handlePromoteToItem(idea)}
                     disabled={busyId === idea.id}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-outline-variant hover:bg-surface-container-high transition-colors disabled:opacity-50"
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium border border-outline-variant hover:bg-surface-container-low transition-colors disabled:opacity-50"
                   >
                     <CalendarPlus className="h-3.5 w-3.5 text-primary" />
                     Promote to item
@@ -165,7 +165,7 @@ export function InboxView({ initialIdeas }: { initialIdeas: IdeaWithCreator[] })
                   <button
                     onClick={() => setConfirmDiscardId(idea.id)}
                     disabled={busyId === idea.id}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-red-500 hover:bg-red-500/10 transition-colors ml-auto disabled:opacity-50"
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium text-error hover:bg-error-container transition-colors ml-auto disabled:opacity-50"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                     Discard
@@ -193,20 +193,20 @@ export function InboxView({ initialIdeas }: { initialIdeas: IdeaWithCreator[] })
 
       {/* Discard confirm */}
       {confirmDiscardId && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 p-4 backdrop-blur-[2px]">
           <div className="bg-background rounded-2xl border border-border p-6 max-w-sm w-full flex flex-col gap-4 shadow-2xl">
             <h3 className="text-base font-bold text-on-surface">Discard idea?</h3>
             <p className="text-sm text-on-surface-variant">This cannot be undone.</p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setConfirmDiscardId(null)}
-                className="px-4 py-2 rounded-lg text-sm font-semibold border border-outline-variant hover:bg-surface-container-high transition-colors"
+                className="px-4 py-2 rounded-full text-sm font-medium border border-outline-variant hover:bg-surface-container-low transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleDiscard(confirmDiscardId)}
-                className="px-4 py-2 rounded-lg text-sm font-semibold bg-red-600 text-white hover:bg-red-700 transition-colors"
+                className="px-4 py-2 rounded-full text-sm font-medium bg-error text-on-error hover:bg-error/90 transition-colors"
               >
                 Discard
               </button>

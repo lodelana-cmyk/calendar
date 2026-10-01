@@ -104,7 +104,7 @@ export default function LoginPage() {
       <div className="min-h-screen bg-surface flex items-center justify-center p-6">
         <div className="w-full max-w-md">
           <div className="text-center mb-10">
-            <h1 className="text-3xl font-bold text-on-surface font-sans tracking-tight">The Editorial Studio</h1>
+            <h1 className="text-[28px] font-semibold text-on-surface tracking-tight">The Editorial Studio</h1>
             <p className="text-sm text-on-surface-variant mt-2">Video Operations Dashboard</p>
           </div>
           <div className="bg-surface-container rounded-2xl p-8 shadow-[0_8px_32px_rgba(45,51,53,0.08)]">
@@ -113,23 +113,23 @@ export default function LoginPage() {
                 <div className="h-16 w-16 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-6">
                   <CheckCircle2 className="h-8 w-8 text-success" />
                 </div>
-                <h2 className="text-2xl font-bold text-on-surface mb-2 font-sans text-center">Confirmation email sent</h2>
+                <h2 className="text-[24px] font-semibold text-on-surface mb-2 text-center">Confirmation email sent</h2>
                 <p className="text-sm text-on-surface-variant text-center mb-6">
                   We&apos;ve sent a new link to <strong>{email}</strong>. Check your inbox.
                 </p>
                 <button
                   onClick={() => { setShowEmailNotConfirmed(false); setResendSuccess(false) }}
-                  className="w-full h-12 bg-surface-container-high text-on-surface rounded-xl font-semibold text-sm hover:bg-surface-container-highest transition-all"
+                  className="w-full h-11 border border-outline-variant text-on-surface rounded-full font-medium text-sm hover:bg-surface-container-low transition-all"
                 >
                   Back to sign in
                 </button>
               </>
             ) : (
               <>
-                <div className="h-16 w-16 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Mail className="h-8 w-8 text-amber-600" />
+                <div className="h-16 w-16 bg-surface-container-low rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Mail className="h-8 w-8 text-on-surface" />
                 </div>
-                <h2 className="text-2xl font-bold text-on-surface mb-2 font-sans text-center">Email not confirmed</h2>
+                <h2 className="text-[24px] font-semibold text-on-surface mb-2 text-center">Email not confirmed</h2>
                 <p className="text-sm text-on-surface-variant text-center mb-6">
                   Your account hasn&apos;t been verified yet. Resend the confirmation email or sign in with Google instead — if your email matches, your account will merge automatically.
                 </p>
@@ -138,7 +138,7 @@ export default function LoginPage() {
                   <button
                     onClick={handleGoogleSignIn}
                     disabled={isGoogleLoading}
-                    className="w-full h-12 flex items-center justify-center gap-3 rounded-xl border border-outline-variant bg-surface-container-high text-on-surface text-sm font-semibold hover:bg-surface-container-highest transition-all disabled:opacity-50"
+                    className="w-full h-11 flex items-center justify-center gap-3 rounded-full border border-outline-variant text-on-surface text-sm font-medium hover:bg-surface-container-low transition-all disabled:opacity-50"
                   >
                     {isGoogleLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleIcon />}
                     Continue with Google
@@ -146,13 +146,13 @@ export default function LoginPage() {
                   <button
                     onClick={handleResendConfirmation}
                     disabled={isResending}
-                    className="w-full h-12 bg-primary text-primary-foreground rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 transition-all disabled:opacity-50"
+                    className="w-full h-11 bg-primary text-primary-foreground rounded-full font-medium text-sm flex items-center justify-center gap-2 hover:bg-primary/85 transition-all disabled:opacity-50"
                   >
                     {isResending ? <><Loader2 className="h-4 w-4 animate-spin" />Sending...</> : <><Mail className="h-4 w-4" />Resend confirmation</>}
                   </button>
                   <button
                     onClick={() => { setShowEmailNotConfirmed(false); setError(null) }}
-                    className="w-full h-12 bg-surface-container-high text-on-surface rounded-xl font-semibold text-sm hover:bg-surface-container-highest transition-all"
+                    className="w-full h-11 border border-outline-variant text-on-surface rounded-full font-medium text-sm hover:bg-surface-container-low transition-all"
                   >
                     Try different credentials
                   </button>
@@ -170,12 +170,12 @@ export default function LoginPage() {
     <div className="min-h-screen bg-surface flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <div className="text-center mb-10">
-          <h1 className="text-3xl font-bold text-on-surface font-sans tracking-tight">The Editorial Studio</h1>
+          <h1 className="text-[28px] font-semibold text-on-surface tracking-tight">The Editorial Studio</h1>
           <p className="text-sm text-on-surface-variant mt-2">Video Operations Dashboard</p>
         </div>
 
         <div className="bg-surface-container rounded-2xl p-8 shadow-[0_8px_32px_rgba(45,51,53,0.08)]">
-          <h2 className="text-2xl font-bold text-on-surface mb-1 font-sans">Welcome back</h2>
+          <h2 className="text-[24px] font-semibold text-on-surface mb-1">Welcome back</h2>
           <p className="text-sm text-on-surface-variant mb-8">Sign in to your account to continue</p>
 
           {/* Primary: Google SSO */}
@@ -183,7 +183,7 @@ export default function LoginPage() {
             type="button"
             onClick={handleGoogleSignIn}
             disabled={isGoogleLoading}
-            className="w-full h-12 flex items-center justify-center gap-3 rounded-xl border border-outline-variant bg-surface-container-high text-on-surface text-sm font-semibold hover:bg-surface-container-highest transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full h-11 flex items-center justify-center gap-3 rounded-full border border-outline-variant text-on-surface text-sm font-medium hover:bg-surface-container-low transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isGoogleLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleIcon />}
             Continue with Google
@@ -226,7 +226,7 @@ export default function LoginPage() {
                 {error && <p className="text-sm text-error bg-error/10 px-4 py-3 rounded-xl">{error}</p>}
                 <button
                   type="submit" disabled={isLoading}
-                  className="h-12 bg-primary text-primary-foreground rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="h-11 bg-primary text-primary-foreground rounded-full font-medium text-sm flex items-center justify-center gap-2 hover:bg-primary/85 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? <><Loader2 className="h-4 w-4 animate-spin" />Signing in...</> : "Sign in"}
                 </button>

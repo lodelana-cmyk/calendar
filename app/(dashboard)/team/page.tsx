@@ -42,14 +42,14 @@ export default function TeamPage() {
     <div className="px-4 sm:px-8 lg:px-10 py-6 flex flex-col gap-6">
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <h1 className="text-3xl font-extrabold text-on-surface tracking-tight">Team</h1>
+          <h1 className="text-[28px] font-semibold text-on-surface tracking-tight">Team</h1>
           <p className="text-sm text-on-surface-variant font-medium">
             {teamMembers.length} member{teamMembers.length !== 1 ? "s" : ""}
           </p>
         </div>
         <button
           onClick={() => setInviteOpen(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors flex-shrink-0"
+          className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/85 transition-colors flex-shrink-0"
         >
           <UserPlus className="h-4 w-4" />
           Invite
@@ -88,7 +88,7 @@ export default function TeamPage() {
                   <button
                     onClick={() => handleRoleToggle(member)}
                     title="Click to toggle Editor/Viewer role"
-                    className={`text-xs px-2.5 py-1 rounded-full font-semibold border transition-colors ${
+                    className={`text-xs px-2.5 py-1 rounded-full font-medium border transition-colors ${
                       member.app_role === "editor"
                         ? "border-primary/40 bg-primary/10 text-primary hover:bg-primary/20"
                         : "border-outline-variant bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high"
@@ -101,7 +101,7 @@ export default function TeamPage() {
                 {/* Stats */}
                 <div className="flex items-center gap-4 text-xs text-on-surface-variant">
                   <span><strong className="text-on-surface">{total}</strong> assigned</span>
-                  <span><strong className="text-emerald-600">{published}</strong> published</span>
+                  <span><strong className="text-on-surface">{published}</strong> published</span>
                 </div>
 
                 {/* Progress */}
@@ -112,7 +112,7 @@ export default function TeamPage() {
                 {/* Edit button */}
                 <button
                   onClick={() => setEditingMember(member)}
-                  className="flex items-center justify-center gap-2 py-2 rounded-xl border border-outline-variant text-on-surface-variant text-xs font-semibold hover:bg-surface-container-high transition-colors"
+                  className="flex items-center justify-center gap-2 py-2 rounded-full border border-outline-variant text-on-surface-variant text-xs font-medium hover:bg-surface-container-low transition-colors"
                 >
                   <Pencil className="h-3.5 w-3.5" /> Edit profile
                 </button>

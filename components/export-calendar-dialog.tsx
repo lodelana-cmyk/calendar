@@ -187,7 +187,7 @@ export function ExportCalendarDialog({
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/40 z-50 backdrop-blur-sm" onClick={() => onOpenChange(false)} />
+      <div className="fixed inset-0 bg-black/30 z-50 backdrop-blur-[2px]" onClick={() => onOpenChange(false)} />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
         <div role="dialog" aria-modal="true" className="bg-background border border-border rounded-2xl shadow-2xl w-full max-w-md p-6 flex flex-col gap-5 pointer-events-auto max-h-[90vh] overflow-y-auto">
           <div className="flex items-center justify-between">
@@ -199,7 +199,7 @@ export function ExportCalendarDialog({
 
           {/* Range */}
           <div className="flex flex-col gap-2">
-            <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wide">Date Range</label>
+            <label className="text-[13px] text-on-surface-variant">Date Range</label>
             <div className="grid grid-cols-3 gap-2">
               {([
                 { mode: "month", label: `${MONTHS[month].slice(0,3)} ${year}` },
@@ -207,7 +207,7 @@ export function ExportCalendarDialog({
                 { mode: "custom",label: "Custom" },
               ] as { mode: RangeMode; label: string }[]).map(opt => (
                 <button key={opt.mode} onClick={() => setRangeMode(opt.mode)}
-                  className={`px-3 py-2.5 rounded-xl text-sm font-semibold border transition-colors ${
+                  className={`px-3 py-2.5 rounded-full text-sm font-medium border transition-colors ${
                     rangeMode === opt.mode
                       ? "bg-primary text-primary-foreground border-transparent"
                       : "bg-surface-container-low border-outline-variant text-on-surface hover:bg-surface-container-high"
@@ -230,12 +230,12 @@ export function ExportCalendarDialog({
                 </div>
               </div>
             )}
-            {invalid && <p className="text-xs text-red-500">Start must be before end.</p>}
+            {invalid && <p className="text-xs text-error">Start must be before end.</p>}
           </div>
 
           {/* Format */}
           <div className="flex flex-col gap-2">
-            <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wide">Format</label>
+            <label className="text-[13px] text-on-surface-variant">Format</label>
             <div className="grid grid-cols-2 gap-2">
               {([
                 { fmt: "html" as Format, Icon: FileText, label: "Calendar Doc", desc: "Styled HTML. Open in browser, print to PDF." },
@@ -261,7 +261,7 @@ export function ExportCalendarDialog({
           </div>
 
           <button onClick={doExport} disabled={invalid || inRange.length === 0}
-            className="w-full py-3 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors disabled:opacity-40">
+            className="w-full py-2.5 px-4 rounded-full bg-primary text-primary-foreground text-sm font-medium flex items-center justify-center gap-2 hover:bg-primary/85 transition-colors disabled:opacity-40">
             <Download className="h-4 w-4" />
             {format === "csv" ? "Download CSV" : "Download Calendar Doc"}
           </button>
