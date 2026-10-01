@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react"
 import { User, Mail, Briefcase, Globe, Camera, Check, Key, LogOut, Loader2 } from "lucide-react"
-import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { updateProfileClient, getCurrentUserProfileClient, uploadAvatarClient } from "@/lib/data-client"
@@ -178,7 +177,7 @@ export default function ProfilePage() {
     }
   }
 
-  const displayAvatarUrl = avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${fullName || email}`
+  const displayAvatarUrl = avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(fullName || email)}`
 
   if (isLoading) {
     return (
@@ -189,28 +188,24 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="px-12 py-6 flex flex-col gap-8 max-w-4xl">
+    <div className="px-4 sm:px-6 py-10 flex flex-col max-w-2xl mx-auto w-full">
       {/* Header */}
       <div className="flex flex-col gap-1">
-        <h1 className="text-4xl font-extrabold text-on-surface headline">
-          Your Profile
-        </h1>
-        <p className="text-on-surface-variant font-medium">
-          Manage your personal information and account settings
-        </p>
+        <h1 className="text-[28px] text-on-surface">Profile</h1>
+        <p className="text-sm text-on-surface-variant">Your details and account.</p>
       </div>
 
       {/* Avatar Section */}
-      <div className="bg-surface-container-lowest rounded-xl p-8 shadow-sm">
+      <div className="py-8 border-b border-border last:border-b-0">
         <div className="flex items-center gap-8">
           <div className="relative">
-            <div className="h-24 w-24 rounded-full overflow-hidden ring-4 ring-surface-container-high">
+            <div className="h-20 w-20 rounded-full overflow-hidden border border-border bg-surface-container-low">
               {isUploadingAvatar ? (
                 <div className="h-full w-full bg-surface-container-high flex items-center justify-center">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
               ) : (
-                <Image
+                <img
                   src={displayAvatarUrl}
                   alt="Profile"
                   width={96}
@@ -222,7 +217,7 @@ export default function ProfilePage() {
             <button 
               onClick={handleAvatarClick}
               disabled={isUploadingAvatar}
-              className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+              className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:opacity-90 transition-opacity disabled:opacity-50"
             >
               <Camera className="h-4 w-4" />
             </button>
@@ -235,66 +230,57 @@ export default function ProfilePage() {
             />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-on-surface headline">{fullName || "Your Name"}</h2>
-            <p className="text-primary font-medium">{role || "Role"}</p>
+            <h2 className="text-[24px] font-semibold text-on-surface">{fullName || "Your Name"}</h2>
+            <p className="text-on-surface-variant">{role || "Role"}</p>
             <p className="text-sm text-on-surface-variant mt-1">{email || "Loading..."}</p>
           </div>
         </div>
       </div>
 
       {/* Profile Form */}
-      <div className="bg-surface-container-lowest rounded-xl p-8 shadow-sm">
+      <div className="py-8 border-b border-border last:border-b-0">
         <div className="flex items-center gap-3 mb-6">
-          <div className="h-10 w-10 rounded-xl bg-surface-container-high flex items-center justify-center">
-            <User className="h-5 w-5 text-on-surface-variant" />
-          </div>
           <div>
-            <h2 className="text-lg font-bold text-on-surface headline">Personal Information</h2>
-            <p className="text-sm text-on-surface-variant">Update your personal details</p>
+            <h2 className="text-[22px] text-on-surface">Personal information</h2>
+            <p className="text-sm text-on-surface-variant">Your name, role and timezone.</p>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-6">
           {/* Full Name */}
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-on-surface flex items-center gap-2">
-              <User className="h-4 w-4 text-on-surface-variant" />
-              Full Name
+            <label className="text-[13px] text-on-surface-variant">Full name
             </label>
             <input
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="w-full px-4 py-3 bg-surface-container-low rounded-xl border border-outline-variant text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+              className="w-full h-10 px-3.5 rounded-lg border border-outline-variant bg-surface-container text-sm text-on-surface placeholder:text-on-surface-variant/70 transition-colors focus:outline-none focus:border-on-surface/40 focus:ring-2 focus:ring-ring/10"
               placeholder="Enter your full name"
             />
           </div>
 
           {/* Email (Read-only) */}
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-on-surface flex items-center gap-2">
-              <Mail className="h-4 w-4 text-on-surface-variant" />
-              Email
+            <label className="text-[13px] text-on-surface-variant">Email
             </label>
             <input
               type="email"
               value={email}
               readOnly
-              className="w-full px-4 py-3 bg-surface-container-high rounded-xl border border-outline-variant text-on-surface-variant cursor-not-allowed"
+              className="w-full h-10 px-3.5 rounded-lg border border-border bg-surface-container-low text-sm text-on-surface-variant cursor-not-allowed"
             />
             <p className="text-xs text-on-surface-variant">Email cannot be changed</p>
           </div>
 
           {/* Role */}
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-on-surface flex items-center gap-2">
-              <Briefcase className="h-4 w-4 text-on-surface-variant" />
-              Role
+            <label className="text-[13px] text-on-surface-variant">Role
             </label>
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="w-full px-4 py-3 bg-surface-container-low rounded-xl border border-outline-variant text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer"
+              className="w-full h-10 px-3.5 rounded-lg border border-outline-variant bg-surface-container text-sm text-on-surface placeholder:text-on-surface-variant/70 transition-colors focus:outline-none focus:border-on-surface/40 focus:ring-2 focus:ring-ring/10"
             >
               <option value="">Select a role</option>
               {roles.map((r) => (
@@ -307,14 +293,12 @@ export default function ProfilePage() {
 
           {/* Timezone */}
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-on-surface flex items-center gap-2">
-              <Globe className="h-4 w-4 text-on-surface-variant" />
-              Timezone
+            <label className="text-[13px] text-on-surface-variant">Timezone
             </label>
             <select
               value={timezone}
               onChange={(e) => setTimezone(e.target.value)}
-              className="w-full px-4 py-3 bg-surface-container-low rounded-xl border border-outline-variant text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer"
+              className="w-full h-10 px-3.5 rounded-lg border border-outline-variant bg-surface-container text-sm text-on-surface placeholder:text-on-surface-variant/70 transition-colors focus:outline-none focus:border-on-surface/40 focus:ring-2 focus:ring-ring/10"
             >
               {timezones.map((tz) => (
                 <option key={tz} value={tz}>
@@ -335,7 +319,7 @@ export default function ProfilePage() {
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="px-8 py-3 bg-gradient-to-br from-primary to-primary-container text-white rounded-full font-semibold text-sm flex items-center gap-2 shadow-lg shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50"
+            className="inline-flex items-center gap-2 h-10 px-5 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/85 transition-colors disabled:opacity-50"
           >
             {isSaving ? (
               <>
@@ -345,24 +329,21 @@ export default function ProfilePage() {
             ) : saved ? (
               <>
                 <Check className="h-5 w-5" />
-                Saved!
+                Saved
               </>
             ) : (
-              "Save Changes"
+              "Save changes"
             )}
           </button>
         </div>
       </div>
 
       {/* Account Section */}
-      <div className="bg-surface-container-lowest rounded-xl p-8 shadow-sm">
+      <div className="py-8 border-b border-border last:border-b-0">
         <div className="flex items-center gap-3 mb-6">
-          <div className="h-10 w-10 rounded-xl bg-surface-container-high flex items-center justify-center">
-            <Key className="h-5 w-5 text-on-surface-variant" />
-          </div>
           <div>
-            <h2 className="text-lg font-bold text-on-surface headline">Account</h2>
-            <p className="text-sm text-on-surface-variant">Manage your account security</p>
+            <h2 className="text-[22px] text-on-surface">Account</h2>
+            <p className="text-sm text-on-surface-variant">Password and sign-out.</p>
           </div>
         </div>
 
@@ -370,37 +351,37 @@ export default function ProfilePage() {
           {/* Change Password */}
           <div className="flex items-center justify-between py-3 border-b border-outline-variant/30">
             <div>
-              <p className="text-sm font-semibold text-on-surface">Change Password</p>
-              <p className="text-xs text-on-surface-variant">Update your account password</p>
+              <p className="text-sm font-medium text-on-surface">Change password</p>
+              <p className="text-xs text-on-surface-variant">Set a new password for this account.</p>
             </div>
             <button
               onClick={() => setShowPasswordForm(!showPasswordForm)}
-              className="px-6 py-2.5 bg-surface-container-low text-on-surface rounded-full font-semibold text-sm hover:bg-surface-container-high transition-colors"
+              className="inline-flex items-center h-9 px-4 rounded-full border border-outline-variant text-on-surface text-[13px] font-medium hover:bg-surface-container-low transition-colors"
             >
-              {showPasswordForm ? "Cancel" : "Change Password"}
+              {showPasswordForm ? "Cancel" : "Change password"}
             </button>
           </div>
 
           {/* Password Form - Removed "Current Password" field per Bug 3 */}
           {showPasswordForm && (
-            <div className="p-6 bg-surface-container-low rounded-xl flex flex-col gap-4">
+            <div className="p-5 rounded-xl border border-border flex flex-col gap-4">
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold text-on-surface">New Password</label>
+                <label className="text-[13px] text-on-surface-variant">New password</label>
                 <input
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-surface-container-lowest rounded-xl border border-outline-variant text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  className="w-full h-10 px-3.5 rounded-lg border border-outline-variant bg-surface-container text-sm text-on-surface placeholder:text-on-surface-variant/70 transition-colors focus:outline-none focus:border-on-surface/40 focus:ring-2 focus:ring-ring/10"
                   placeholder="Enter new password"
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold text-on-surface">Confirm New Password</label>
+                <label className="text-[13px] text-on-surface-variant">Confirm New password</label>
                 <input
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-surface-container-lowest rounded-xl border border-outline-variant text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  className="w-full h-10 px-3.5 rounded-lg border border-outline-variant bg-surface-container text-sm text-on-surface placeholder:text-on-surface-variant/70 transition-colors focus:outline-none focus:border-on-surface/40 focus:ring-2 focus:ring-ring/10"
                   placeholder="Confirm new password"
                 />
               </div>
@@ -410,7 +391,7 @@ export default function ProfilePage() {
               <button
                 onClick={handleChangePassword}
                 disabled={isChangingPassword}
-                className="self-end px-6 py-2.5 bg-primary text-white rounded-full font-semibold text-sm hover:opacity-90 transition-opacity flex items-center gap-2 disabled:opacity-50"
+                className="self-end inline-flex items-center gap-2 h-10 px-5 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/85 transition-colors disabled:opacity-50"
               >
                 {isChangingPassword ? (
                   <>
@@ -420,10 +401,10 @@ export default function ProfilePage() {
                 ) : passwordSaved ? (
                   <>
                     <Check className="h-4 w-4" />
-                    Password Updated!
+                    Password updated
                   </>
                 ) : (
-                  "Update Password"
+                  "Update password"
                 )}
               </button>
             </div>
@@ -432,16 +413,16 @@ export default function ProfilePage() {
           {/* Sign Out */}
           <div className="flex items-center justify-between py-3">
             <div>
-              <p className="text-sm font-semibold text-on-surface">Sign Out</p>
+              <p className="text-sm font-medium text-on-surface">Sign out</p>
               <p className="text-xs text-on-surface-variant">Sign out of your account on this device</p>
             </div>
             <button
               onClick={handleSignOut}
               disabled={isSigningOut}
-              className="px-6 py-2.5 bg-error/10 text-error rounded-full font-semibold text-sm hover:bg-error/20 transition-colors flex items-center gap-2 disabled:opacity-50"
+              className="inline-flex items-center gap-2 h-9 px-4 rounded-full border border-error/30 text-error text-[13px] font-medium hover:bg-error-container transition-colors disabled:opacity-50"
             >
               <LogOut className="h-4 w-4" />
-              {isSigningOut ? "Signing out..." : "Sign Out"}
+              {isSigningOut ? "Signing out..." : "Sign out"}
             </button>
           </div>
         </div>

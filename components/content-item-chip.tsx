@@ -28,8 +28,8 @@ export function ContentItemChip({ item, onClick, onDragStart, compact }: Props) 
       onDragStart={onDragStart}
       onKeyDown={e => { if (e.key === "Enter") onClick() }}
       title={`${item.title} · ${item.campaignTitle} · ${item.status}${isProvisional ? " (Provisional)" : ""}\nDrag to reschedule`}
-      style={{ backgroundColor: `${color}1f`, borderColor: `${color}66`, borderLeftColor: color }}
-      className={`rounded-md border border-l-[3px] text-on-surface px-2 py-1.5 text-[11px] leading-snug font-medium cursor-grab active:cursor-grabbing transition-shadow select-none hover:shadow-sm ${
+      style={{ backgroundColor: `${color}33`, borderColor: `${color}59`, borderLeftColor: color }}
+      className={`rounded-md border border-l-[3px] text-on-surface px-2 py-1.5 text-[11.5px] leading-snug font-medium cursor-grab active:cursor-grabbing transition-shadow select-none hover:shadow-sm ${
         isProvisional ? "border-dashed" : ""
       } ${item.status === "Published" ? "opacity-55" : ""} ${compact ? "truncate" : ""}`}
     >

@@ -11,11 +11,12 @@ import { useRefreshData } from "@/components/data-provider"
 import { updateContentItemClient, moveContentItemsClient } from "@/lib/data-client"
 import type { ContentItemWithCampaign, ItemStatus } from "@/lib/database.types"
 import {
-  CHANNEL_ICONS, STATUS_COLORS,
+  CHANNEL_ICONS,
   CHANNEL_OPTIONS, MOTION_OPTIONS, STATUS_OPTIONS, PRODUCT_OPTIONS,
   NO_CAMPAIGN_ID, campaignColor, AUDIENCE_SEGMENTS
 } from "@/lib/database.types"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Button, SegmentedControl, buttonCls, cx, fieldSmCls, linkCls } from "@/components/kit"
 import { ContentItemChip } from "@/components/content-item-chip"
 import { ContentItemDialog } from "@/components/content-item-dialog"
 import { ImportPlanDialog } from "@/components/import-plan-dialog"
@@ -326,22 +327,22 @@ export function ContentCalendar() {
         onDragLeave={() => { if (dragOverDate === date) setDragOverDate(null) }}
         onDrop={e => handleDrop(date, e)}
         className={`flex flex-col gap-1 p-1.5 sm:p-2 transition-colors ${
-          !date ? "bg-surface-container-low/40" : ""
-        } ${isToday ? "bg-primary/5" : ""} ${
-          isTarget ? "bg-primary/10 ring-2 ring-inset ring-primary/40" : ""
+          !date ? "bg-surface-container-low/50" : ""
+        } ${isToday ? "bg-surface-container-lowest" : ""} ${
+          isTarget ? "bg-surface-container-low ring-2 ring-inset ring-on-surface/25" : ""
         }`}
       >
         {date && (
           <div className="flex items-center justify-between mb-0.5">
-            <span className={`text-xs font-semibold leading-none ${
+            <span className={`text-xs font-medium leading-none tabular-nums ${
               isToday
-                ? "bg-primary text-white w-5 h-5 rounded-full flex items-center justify-center"
+                ? "bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center"
                 : "text-on-surface-variant"
             }`}>{dayNum}</span>
             {!mini && (
               <button
                 onClick={() => openNew(date)}
-                className="opacity-0 group-hover/cell:opacity-100 h-4 w-4 rounded flex items-center justify-center hover:bg-surface-container-high transition-all"
+                className="opacity-0 group-hover/cell:opacity-100 h-5 w-5 rounded-full flex items-center justify-center hover:bg-surface-container-low transition-all"
               >
                 <Plus className="h-3 w-3 text-on-surface-variant" />
               </button>
@@ -367,11 +368,11 @@ export function ContentCalendar() {
   const renderMonthGrid = () => {
     const grid = monthGrid(year, month)
     return (
-      <div className="rounded-2xl border border-border overflow-hidden">
+      <div className="rounded-xl border border-border overflow-hidden bg-surface-bright">
         {/* weekday headers */}
         <div className="grid grid-cols-7 border-b border-border bg-surface-container-low">
           {DAY_LABELS.map(d => (
-            <div key={d} className="text-center py-2 text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
+            <div key={d} className="text-center py-2.5 text-[13px] text-on-surface-variant">
               {d}
             </div>
           ))}
@@ -394,15 +395,19 @@ export function ContentCalendar() {
   const renderWeekGrid = () => {
     const days = currentWeekDays(weekAnchor)
     return (
-      <div className="rounded-2xl border border-border overflow-hidden">
+      <div className="rounded-xl border border-border overflow-hidden bg-surface-bright">
         <div className="grid grid-cols-7 border-b border-border bg-surface-container-low">
           {days.map((date, i) => {
             const isToday = date === toDateStr(today)
             const d = date ? parseDateStr(date) : null
             return (
-              <div key={i} className={`text-center py-3 ${isToday ? "bg-primary/10" : ""}`}>
-                <div className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">{DAY_LABELS[i]}</div>
-                {d && <div className={`text-lg font-bold mt-0.5 ${isToday ? "text-primary" : "text-on-surface"}`}>{d.getDate()}</div>}
+              <div key={i} className="text-center py-3">
+                <div className="text-[13px] text-on-surface-variant">{DAY_LABELS[i]}</div>
+                {d && (
+                  <div className={`mx-auto mt-1 h-8 w-8 rounded-full flex items-center justify-center text-base font-semibold tabular-nums ${
+                    isToday ? "bg-primary text-primary-foreground" : "text-on-surface"
+                  }`}>{d.getDate()}</div>
+                )}
               </div>
             )
           })}
@@ -436,8 +441,8 @@ export function ContentCalendar() {
           const weekAllSelected  = selectedInWeek === weekIds.length && weekIds.length > 0
           const weekSomeSelected = selectedInWeek > 0
           return (
-            <div key={wi} className="rounded-2xl border border-border overflow-hidden">
-              <div className="flex items-center gap-3 px-4 py-3 bg-surface-container-low border-b border-border">
+            <div key={wi} className="rounded-xl border border-border overflow-hidden bg-surface-bright">
+              <div className="flex items-center gap-3 px-4 py-2.5 bg-surface-container-low border-b border-border">
                 {isEditor && (
                   <input
                     type="checkbox"
@@ -448,7 +453,7 @@ export function ContentCalendar() {
                     aria-label={`Select all items in week ${wi + 1}`}
                   />
                 )}
-                <span className="text-sm font-semibold text-on-surface">
+                <span className="text-sm font-medium text-on-surface">
                   Week {wi + 1} — {MONTHS[start.getMonth()].slice(0,3)} {start.getDate()}–{end.getDate()}
                 </span>
                 <span className="ml-auto text-xs text-on-surface-variant">{done}/{items.length} published</span>
@@ -486,7 +491,7 @@ export function ContentCalendar() {
                     <span className="text-xs text-on-surface-variant flex-shrink-0">{item.publish_date ? parseDateStr(item.publish_date).toLocaleDateString("en-GB",{day:"numeric",month:"short"}) : ""}</span>
                     <span
                       className="text-xs font-medium px-2 py-0.5 rounded-md flex-shrink-0 max-w-[180px] truncate text-on-surface"
-                      style={{ backgroundColor: `${campaignColor(item.campaign_id)}26` }}
+                      style={{ backgroundColor: `${campaignColor(item.campaign_id)}33` }}
                     >
                       {item.campaignTitle}
                     </span>
@@ -508,7 +513,7 @@ export function ContentCalendar() {
     if (!unscheduled.length) return null
     return (
       <div
-        className="rounded-2xl border-2 border-dashed border-outline-variant overflow-hidden"
+        className="rounded-xl border border-dashed border-outline-variant overflow-hidden"
         onDragOver={e => { e.preventDefault(); setDragOverDate("__unscheduled__") }}
         onDragLeave={() => { if (dragOverDate === "__unscheduled__") setDragOverDate(null) }}
         onDrop={e => handleDrop(null, e)}
@@ -516,8 +521,8 @@ export function ContentCalendar() {
         <div className={`flex items-center justify-between px-4 py-3 transition-colors ${
           dragOverDate === "__unscheduled__" ? "bg-primary/10" : "bg-surface-container-low"
         }`}>
-          <span className="text-sm font-semibold text-on-surface-variant">Unscheduled ({unscheduled.length})</span>
-          <button onClick={() => openNew(null)} className="text-xs text-primary hover:underline font-medium">+ Add item</button>
+          <span className="text-sm font-medium text-on-surface">Unscheduled <span className="text-on-surface-variant font-normal">{unscheduled.length}</span></span>
+          <button onClick={() => openNew(null)} className={cx("text-[13px]", linkCls)}>Add item</button>
         </div>
         <div className="flex flex-wrap gap-2 p-3">
           {unscheduled.map(item => (
@@ -545,9 +550,6 @@ export function ContentCalendar() {
     setFilterSegment("All")
   }
 
-  const filterSelectCls =
-    "w-full text-xs bg-surface-container border border-outline-variant rounded-lg px-2.5 py-2 text-on-surface font-medium focus:outline-none focus:ring-2 focus:ring-ring"
-
   // ── render ────────────────────────────────────────────────────────────────
 
   return (
@@ -556,47 +558,38 @@ export function ContentCalendar() {
       {/* Toolbar — single row */}
       <div className="flex flex-wrap items-center gap-2">
 
-        {/* Nav */}
-        <div className="flex items-center gap-1 bg-surface-container-low border border-outline-variant rounded-xl px-1 py-1">
-          <button onClick={goBack} className="p-1.5 rounded-lg hover:bg-surface-container-high transition-colors">
+        {/* Month / week nav */}
+        <div className="flex items-center h-10 rounded-full border border-outline-variant">
+          <button onClick={goBack} aria-label="Previous" className="h-10 w-10 inline-flex items-center justify-center rounded-full text-on-surface-variant hover:text-on-surface transition-colors">
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <span className="px-3 text-sm font-semibold text-on-surface min-w-[180px] text-center">{navLabel}</span>
-          <button onClick={goForward} className="p-1.5 rounded-lg hover:bg-surface-container-high transition-colors">
+          <span className="px-1 text-sm font-medium text-on-surface min-w-[150px] text-center">{navLabel}</span>
+          <button onClick={goForward} aria-label="Next" className="h-10 w-10 inline-flex items-center justify-center rounded-full text-on-surface-variant hover:text-on-surface transition-colors">
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
 
-        {/* View switcher */}
-        <div className="flex items-center bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden">
-          {(["month","week","list"] as ViewMode[]).map((v) => {
-            const Icon = v === "month" ? CalendarDays : v === "week" ? Columns : List
-            return (
-              <button
-                key={v}
-                onClick={() => setView(v)}
-                className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold transition-colors capitalize ${
-                  view === v
-                    ? "bg-primary text-primary-foreground"
-                    : "text-on-surface-variant hover:bg-surface-container-high"
-                }`}
-              >
-                <Icon className="h-3.5 w-3.5" />
-                {v}
-              </button>
-            )
-          })}
-        </div>
+        <SegmentedControl
+          ariaLabel="Calendar view"
+          value={view}
+          onChange={setView}
+          options={[
+            { value: "month", label: "Month", icon: <CalendarDays className="h-3.5 w-3.5" /> },
+            { value: "week",  label: "Week",  icon: <Columns className="h-3.5 w-3.5" /> },
+            { value: "list",  label: "List",  icon: <List className="h-3.5 w-3.5" /> },
+          ]}
+        />
 
         {/* Filters — collapsed into one popover to keep the header to a single row */}
         <Popover>
           <PopoverTrigger asChild>
             <button
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-colors ${
+              className={cx(
+                "inline-flex items-center gap-1.5 h-10 px-4 rounded-full border text-sm font-medium transition-colors",
                 activeFilterCount > 0
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-outline-variant bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high"
-              }`}
+                  ? "border-primary text-on-surface"
+                  : "border-outline-variant text-on-surface-variant hover:text-on-surface",
+              )}
             >
               <SlidersHorizontal className="h-3.5 w-3.5" />
               Filters
@@ -608,7 +601,7 @@ export function ContentCalendar() {
             </button>
           </PopoverTrigger>
           <PopoverContent align="start" className="w-72 p-3 flex flex-col gap-2">
-            <select value={filterCampaign} onChange={e => setFilterCampaign(e.target.value)} className={filterSelectCls}>
+            <select value={filterCampaign} onChange={e => setFilterCampaign(e.target.value)} className={fieldSmCls}>
               <option value="All">All campaigns</option>
               {campaigns.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
             </select>
@@ -619,17 +612,17 @@ export function ContentCalendar() {
               { value: filterProduct,  setter: setFilterProduct,  label: "All products",  options: PRODUCT_OPTIONS },
               { value: filterSegment,  setter: setFilterSegment,  label: "All audiences", options: AUDIENCE_SEGMENTS },
             ].map(({ value, setter, label, options }) => (
-              <select key={label} value={value} onChange={e => setter(e.target.value)} className={filterSelectCls}>
+              <select key={label} value={value} onChange={e => setter(e.target.value)} className={fieldSmCls}>
                 <option value="All">{label}</option>
                 {options.map(o => <option key={o}>{o}</option>)}
               </select>
             ))}
-            <select value={filterAssignee} onChange={e => setFilterAssignee(e.target.value)} className={filterSelectCls}>
+            <select value={filterAssignee} onChange={e => setFilterAssignee(e.target.value)} className={fieldSmCls}>
               <option value="All">All assignees</option>
               {profiles.map(p => <option key={p.id} value={p.id}>{p.full_name}</option>)}
             </select>
             {activeFilterCount > 0 && (
-              <button onClick={clearFilters} className="self-end text-xs font-semibold text-primary hover:underline">
+              <button onClick={clearFilters} className={cx("self-end text-[13px]", linkCls)}>
                 Clear filters
               </button>
             )}
@@ -638,28 +631,18 @@ export function ContentCalendar() {
 
         <div className="flex-1" />
 
-        {/* Action buttons */}
-        <button
-          onClick={() => openNew("")}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors"
-        >
+        <Button onClick={() => openNew("")}>
           <Plus className="h-4 w-4" />
-          <span className="hidden sm:inline">Add Item</span>
-        </button>
-        <button
-          onClick={() => setImportOpen(true)}
-          className="flex items-center gap-2 px-3 py-2 bg-surface-container border border-outline-variant rounded-lg text-sm font-semibold text-on-surface hover:bg-surface-container-high transition-colors"
-        >
-          <Sparkles className="h-4 w-4 text-primary" />
+          <span className="hidden sm:inline">Add item</span>
+        </Button>
+        <Button variant="secondary" onClick={() => setImportOpen(true)}>
+          <Sparkles className="h-4 w-4" />
           <span className="hidden sm:inline">Import</span>
-        </button>
-        <button
-          onClick={() => setExportOpen(true)}
-          className="flex items-center gap-2 px-3 py-2 bg-surface-container border border-outline-variant rounded-lg text-sm font-semibold text-on-surface hover:bg-surface-container-high transition-colors"
-        >
+        </Button>
+        <Button variant="secondary" onClick={() => setExportOpen(true)}>
           <Download className="h-4 w-4" />
           <span className="hidden sm:inline">Export</span>
-        </button>
+        </Button>
       </div>
 
       {/* Calendar body */}
@@ -672,14 +655,14 @@ export function ContentCalendar() {
 
       {/* Bulk move bar — list view only, editors only */}
       {view === "list" && isEditor && selectedIds.size > 0 && (
-        <div className="sticky bottom-4 z-30 mx-auto w-fit max-w-full flex flex-wrap items-center gap-3 px-4 py-3 rounded-2xl border border-outline-variant bg-surface-container-high shadow-lg">
-          <span className="text-sm font-semibold text-on-surface whitespace-nowrap">
+        <div className="sticky bottom-4 z-30 mx-auto w-fit max-w-full flex flex-wrap items-center gap-2 pl-5 pr-2 py-2 rounded-full border border-outline-variant bg-surface-bright shadow-lg">
+          <span className="text-sm font-medium text-on-surface whitespace-nowrap mr-1">
             {selectedIds.size} selected
           </span>
           <select
             value={moveTarget}
             onChange={e => setMoveTarget(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-outline-variant bg-surface-container text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            className={cx(fieldSmCls, "w-auto rounded-full")}
             aria-label="Destination campaign"
           >
             <option value="">No campaign</option>
@@ -690,18 +673,18 @@ export function ContentCalendar() {
           <button
             onClick={handleBulkMove}
             disabled={moving}
-            className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors whitespace-nowrap"
+            className={buttonCls("primary", "sm")}
           >
             {moving ? "Moving…" : "Move"}
           </button>
           <button
             onClick={clearSelection}
             disabled={moving}
-            className="px-3 py-2 rounded-lg text-sm font-semibold text-on-surface-variant hover:bg-surface-container-highest disabled:opacity-50 transition-colors"
+            className={buttonCls("ghost", "sm")}
           >
             Clear
           </button>
-          {moveError && <span className="text-xs text-red-600 font-medium w-full">{moveError}</span>}
+          {moveError && <span className="text-[13px] text-error w-full px-1 pb-1">{moveError}</span>}
         </div>
       )}
 
@@ -715,18 +698,17 @@ export function ContentCalendar() {
         const inreview = inRange.filter(i => i.status === "In review").length
         const sched    = inRange.filter(i => i.status === "Scheduled").length
         return (
-          <div className="flex items-center gap-6 px-1 mt-1">
+          <div className="flex flex-wrap items-baseline gap-x-7 gap-y-2 px-1 pt-1">
             {[
-              { label: "Total",      val: inRange.length, dot: "#94a3b8" },
-              { label: "Published",  val: done,           dot: STATUS_COLORS["Published"]?.dot || "#10b981" },
-              { label: "In Progress",val: inprog,         dot: STATUS_COLORS["In progress"]?.dot || "#3b82f6" },
-              { label: "In Review",  val: inreview,       dot: STATUS_COLORS["In review"]?.dot  || "#f59e0b" },
-              { label: "Scheduled",  val: sched,          dot: STATUS_COLORS["Scheduled"]?.dot  || "#8b5cf6" },
+              { label: "Total",       val: inRange.length },
+              { label: "Published",   val: done },
+              { label: "In progress", val: inprog },
+              { label: "In review",   val: inreview },
+              { label: "Scheduled",   val: sched },
             ].map(s => (
-              <div key={s.label} className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: s.dot }} aria-hidden="true" />
-                <span className="text-lg font-bold text-on-surface tabular-nums">{s.val}</span>
-                <span className="text-xs text-on-surface-variant">{s.label}</span>
+              <div key={s.label} className="flex items-baseline gap-1.5">
+                <span className="text-xl font-semibold tracking-tight text-on-surface tabular-nums">{s.val}</span>
+                <span className="text-[13px] text-on-surface-variant">{s.label}</span>
               </div>
             ))}
           </div>

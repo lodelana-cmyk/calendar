@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Plus, Search } from "lucide-react"
 import { useStore } from "@/lib/store"
-import { DashboardSkeleton } from "@/components/loading-skeletons"
+import { ListSkeleton } from "@/components/loading-skeletons"
 import { CampaignCard } from "@/components/campaign-card"
 import { CampaignDetailSheet } from "@/components/campaign-detail-sheet"
 import { CreateCampaignDialog } from "@/components/create-campaign-dialog"
@@ -23,7 +23,7 @@ export default function CampaignsPage() {
   const [search,         setSearch]         = useState("")
   const [filterMotion,   setFilterMotion]   = useState("All")
 
-  if (isLoading) return <DashboardSkeleton />
+  if (isLoading) return <ListSkeleton />
 
   const filtered = campaigns.filter(c => {
     const matchSearch = !search || c.title.toLowerCase().includes(search.toLowerCase())
@@ -44,17 +44,17 @@ export default function CampaignsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <h1 className="text-3xl font-extrabold text-on-surface tracking-tight">Campaigns</h1>
+          <h1 className="text-[28px] font-semibold text-on-surface tracking-tight">Campaigns</h1>
           <p className="text-sm text-on-surface-variant font-medium">
             {campaigns.length} campaign{campaigns.length !== 1 ? "s" : ""} &middot; {total} items &middot; {published} published
           </p>
         </div>
         <button
           onClick={() => setCreateOpen(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors flex-shrink-0"
+          className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/85 transition-colors flex-shrink-0"
         >
           <Plus className="h-4 w-4" />
-          New Campaign
+          New campaign
         </button>
       </div>
 
@@ -78,7 +78,7 @@ export default function CampaignsPage() {
               <button
                 key={m}
                 onClick={() => setFilterMotion(m)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors border ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
                   active
                     ? "bg-primary text-primary-foreground border-transparent"
                     : "border-outline-variant bg-surface-container text-on-surface-variant hover:bg-surface-container-high"
@@ -100,7 +100,7 @@ export default function CampaignsPage() {
           <p className="text-on-surface-variant text-sm">No campaigns found.</p>
           <button
             onClick={() => setCreateOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/85 transition-colors"
           >
             <Plus className="h-4 w-4" /> Create your first campaign
           </button>
@@ -115,7 +115,7 @@ export default function CampaignsPage() {
               <section key={motionLabel}>
                 <div className="flex items-center gap-2.5 mb-4">
                   <span className="w-2 h-2 rounded-full" style={{ background: accent }} aria-hidden="true" />
-                  <h2 className="text-sm font-bold text-on-surface uppercase tracking-wider">{motionLabel}</h2>
+                  <h2 className="text-[15px] font-semibold text-on-surface">{motionLabel}</h2>
                   <span className="text-xs text-on-surface-variant">{group.length}</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

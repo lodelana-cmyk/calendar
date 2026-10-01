@@ -1,18 +1,12 @@
 import type { Metadata, Viewport } from 'next'
-import { Manrope, Inter } from 'next/font/google'
+import { Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
-
-const manrope = Manrope({ 
-  subsets: ['latin'],
-  variable: '--font-manrope',
-  weight: ['400', '600', '700', '800'],
-})
 
 const inter = Inter({ 
   subsets: ['latin'],
   variable: '--font-inter',
-  weight: ['400', '500', '600'],
+  weight: ['400', '500', '600', '700'],
 })
 
 export const metadata: Metadata = {
@@ -21,7 +15,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#742fe5',
+  themeColor: '#f1f0ed',
 }
 
 export default function RootLayout({
@@ -30,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${manrope.variable} ${inter.variable} bg-background`}>
+    <html lang="en" className={`${inter.variable} bg-background`}>
       <body className="font-sans antialiased">
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}

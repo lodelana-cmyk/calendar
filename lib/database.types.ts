@@ -174,28 +174,30 @@ export interface CampaignWithItems extends Campaign {
 // ============================================================
 
 /** Motion accent colour — used for a 3px left border or dot ONLY, never as text or card colour */
+// Monochrome by design: colour is reserved for campaigns on the calendar.
 export const MOTION_ACCENTS: Record<CampaignMotion, string> = {
-  SMB:        "#3b82f6", // blue
-  Enterprise: "#8b5cf6", // violet
-  Both:       "#10b981", // emerald
-  Retention:  "#f59e0b", // amber
+  SMB:        "#8d8a85",
+  Enterprise: "#5c5a56",
+  Both:       "#a8a5a0",
+  Retention:  "#3b3a37",
 }
 
 /** Campaign type accent — small badge tint */
 export const TYPE_ACCENTS: Record<CampaignType, string> = {
-  Pillar:      "#6366f1",
-  Launch:      "#ec4899",
-  "Always-on": "#14b8a6",
+  Pillar:      "#3b3a37",
+  Launch:      "#6e6c68",
+  "Always-on": "#a8a5a0",
 }
 
 // ---- Status: neutral badge + coloured dot only ----
+/** Greyscale ramp: the further along an item is, the darker its dot. */
 export const STATUS_COLORS: Record<ItemStatus, { dot: string }> = {
-  Idea:          { dot: "#94a3b8" },
-  Planned:       { dot: "#64748b" },
-  "In progress": { dot: "#3b82f6" },
-  "In review":   { dot: "#f59e0b" },
-  Scheduled:     { dot: "#8b5cf6" },
-  Published:     { dot: "#10b981" },
+  Idea:          { dot: "#d0cdc7" },
+  Planned:       { dot: "#b3b0aa" },
+  "In progress": { dot: "#8d8a85" },
+  "In review":   { dot: "#5c5a56" },
+  Scheduled:     { dot: "#3b3a37" },
+  Published:     { dot: "#141414" },
 }
 
 // ---- Channel icons (short marks) ----
@@ -284,11 +286,20 @@ export const ICON_COLORS = [
 // Calendar colour per campaign. Derived from the id rather than the stored
 // icon_color, which is a Tailwind class that most campaigns leave at the
 // same default — so it can't tell campaigns apart.
+// Muted, earthy hues so campaign tints sit quietly on the off-white UI.
 const CAMPAIGN_PALETTE = [
-  "#6366f1", "#10b981", "#f43f5e", "#f59e0b", "#0ea5e9",
-  "#8b5cf6", "#14b8a6", "#ec4899", "#84cc16", "#f97316",
+  "#6f8bb3", // dusty blue
+  "#7f9e83", // sage
+  "#c07f63", // terracotta
+  "#c4a052", // ochre
+  "#9a7fa3", // plum
+  "#6c9e9c", // teal
+  "#b98293", // rose
+  "#9ba065", // olive
+  "#8a87b4", // periwinkle
+  "#b0916f", // sand
 ]
-const NO_CAMPAIGN_COLOR = "#94a3b8"
+const NO_CAMPAIGN_COLOR = "#a8a5a0"
 
 export function campaignColor(campaignId: string | null | undefined): string {
   if (!campaignId || campaignId === NO_CAMPAIGN_ID) return NO_CAMPAIGN_COLOR

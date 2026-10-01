@@ -163,14 +163,14 @@ export function GenerateItemsDialog({ open, onOpenChange, campaign }: Props) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
-            {step === "input" && "Generate Content Items"}
+            {step === "input" && "Generate content items"}
             {step === "preview" && "Review Drafted Items"}
             {step === "done" && "Items Added"}
           </DialogTitle>
         </DialogHeader>
 
         {error && (
-          <div className="p-3 bg-red-50 dark:bg-red-950/30 rounded-xl text-sm text-red-600 font-medium">{error}</div>
+          <div className="p-3 bg-error-container rounded-xl text-sm text-error font-medium">{error}</div>
         )}
 
         {step === "input" && (
@@ -181,7 +181,7 @@ export function GenerateItemsDialog({ open, onOpenChange, campaign }: Props) {
             </p>
 
             <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wide">Intended outcomes</span>
+              <span className="text-[13px] text-on-surface-variant">Intended outcomes</span>
               <textarea
                 value={description}
                 onChange={e => setDescription(e.target.value)}
@@ -192,7 +192,7 @@ export function GenerateItemsDialog({ open, onOpenChange, campaign }: Props) {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wide">Channels</span>
+              <span className="text-[13px] text-on-surface-variant">Channels</span>
               <div className="flex flex-wrap gap-2">
                 {CHANNEL_OPTIONS.filter(c => c !== "Other").map(c => {
                   const active = selectedChannels.has(c)
@@ -201,9 +201,9 @@ export function GenerateItemsDialog({ open, onOpenChange, campaign }: Props) {
                       key={c}
                       type="button"
                       onClick={() => toggleChannel(c)}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                         active
-                          ? "bg-primary text-white border-primary"
+                          ? "bg-primary text-primary-foreground border-primary"
                           : "bg-surface-container-low text-on-surface-variant border-outline-variant hover:bg-surface-container-high"
                       }`}
                     >
@@ -215,7 +215,7 @@ export function GenerateItemsDialog({ open, onOpenChange, campaign }: Props) {
             </div>
 
             <div className="flex flex-col gap-1.5 max-w-[140px]">
-              <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wide">Roughly how many</span>
+              <span className="text-[13px] text-on-surface-variant">Roughly how many</span>
               <input
                 type="number"
                 min={1}
@@ -229,7 +229,7 @@ export function GenerateItemsDialog({ open, onOpenChange, campaign }: Props) {
             <button
               onClick={handleGenerate}
               disabled={isGenerating || selectedChannels.size === 0 || description.trim().length < 10}
-              className="w-full py-3 px-4 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full py-3 px-4 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {isGenerating ? (
                 <><Loader2 className="h-4 w-4 animate-spin" /> Drafting items…</>
@@ -264,11 +264,11 @@ export function GenerateItemsDialog({ open, onOpenChange, campaign }: Props) {
             </div>
             <div className="flex gap-3">
               <button onClick={() => setStep("input")} disabled={isApplying}
-                className="flex items-center justify-center gap-2 px-4 py-3 bg-surface-container-high rounded-xl text-sm font-semibold text-on-surface-variant hover:bg-surface-container-highest transition-colors disabled:opacity-50">
+                className="flex items-center justify-center gap-2 px-4 py-2.5 border border-outline-variant rounded-full text-sm font-medium text-on-surface-variant hover:bg-surface-container-low transition-colors disabled:opacity-50">
                 <ArrowLeft className="h-4 w-4" /> Back
               </button>
               <button onClick={handleApply} disabled={isApplying || checkedCount === 0}
-                className="flex-1 py-3 px-4 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                className="flex-1 py-2.5 px-4 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/85 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
                 {isApplying ? (
                   <><Loader2 className="h-4 w-4 animate-spin" /> Adding {checkedCount} items…</>
                 ) : `Add ${checkedCount} Item${checkedCount !== 1 ? "s" : ""}`}
@@ -279,14 +279,14 @@ export function GenerateItemsDialog({ open, onOpenChange, campaign }: Props) {
 
         {step === "done" && (
           <div className="flex flex-col items-center gap-4 py-6 text-center">
-            <div className="h-14 w-14 rounded-full bg-emerald-100 flex items-center justify-center">
-              <Check className="h-7 w-7 text-emerald-600" />
+            <div className="h-14 w-14 rounded-full bg-surface-container-low flex items-center justify-center">
+              <Check className="h-7 w-7 text-on-surface" />
             </div>
             <p className="text-sm text-on-surface-variant">
               <strong className="text-on-surface">{addedCount} items</strong> added to {campaign.title}.
             </p>
             <button onClick={() => onOpenChange(false)}
-              className="px-6 py-3 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors">
+              className="px-6 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/85 transition-colors">
               Done
             </button>
           </div>

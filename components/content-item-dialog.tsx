@@ -11,13 +11,16 @@ import { useRefreshData } from "@/components/data-provider"
 import { CreateCampaignDialog } from "@/components/create-campaign-dialog"
 import { MentionInput } from "@/components/mention-input"
 import { parseMentions } from "@/lib/mentions"
+import {
+  Button, ErrorText, Label, Pill, SegmentedControl, cx, fieldCls, fieldSmCls, linkCls, textareaCls,
+} from "@/components/kit"
 import type {
   ContentItemWithCampaign, ItemStatus, ContentChannel, ContentFormat,
   DateConfidence, ItemComment, Contributor, ContributorRole,
 } from "@/lib/database.types"
 import {
-  MOTION_ACCENTS, STATUS_COLORS, STATUS_OPTIONS, CHANNEL_OPTIONS, FORMAT_OPTIONS, CONTRIBUTOR_ROLE_OPTIONS,
-  NO_CAMPAIGN_ID, AUDIENCE_SEGMENT_GROUPS,
+  STATUS_COLORS, STATUS_OPTIONS, CHANNEL_OPTIONS, FORMAT_OPTIONS, CONTRIBUTOR_ROLE_OPTIONS,
+  NO_CAMPAIGN_ID, AUDIENCE_SEGMENT_GROUPS, campaignColor,
 } from "@/lib/database.types"
 
 const NEW_CAMPAIGN_OPTION = "__new_campaign__"
@@ -44,18 +47,8 @@ const EMPTY_FORM = {
   live_url: "",
 }
 
-// --- Label helper ---
-function FieldLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-widest">
-      {children}
-    </label>
-  )
-}
-
-function selectCls() {
-  return "w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface-container text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-ring transition-shadow"
-}
+const FieldLabel = Label
+const selectCls = () => fieldCls
 
 export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defaultCampaignId }: Props) {
   const { profiles, campaigns, currentUser } = useStore()
@@ -63,7 +56,6 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
   const { refreshCampaigns } = useRefreshData()
 
   const isNew = item === null
-  const motionAccent = item ? (MOTION_ACCENTS[item.campaignMotion] || "#94a3b8") : "#94a3b8"
 
   const [form, setForm] = useState(() =>
     item
@@ -219,26 +211,26 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/50 z-50" onClick={handleClose} aria-hidden="true" />
+      <div className="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-50" onClick={handleClose} aria-hidden="true" />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
         <div
           role="dialog"
           aria-modal="true"
           aria-label={isNew ? "New content item" : form.title}
-          className="relative bg-background rounded-2xl border border-border shadow-2xl w-full max-w-lg pointer-events-auto flex flex-col overflow-hidden max-h-[90vh]"
+          className="relative bg-background rounded-2xl border border-border shadow-2xl w-full max-w-xl pointer-events-auto flex flex-col overflow-hidden max-h-[90vh]"
         >
           {/* Header */}
-          <div className="flex items-start gap-3 px-5 pt-5 pb-3 flex-shrink-0">
+          <div className="flex items-start gap-3 px-6 pt-6 pb-4 flex-shrink-0">
             <div className="flex-1 min-w-0">
               {!isNew && (
-                <p className="flex items-center gap-1.5 text-xs text-on-surface-variant mb-1 truncate">
-                  <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: motionAccent }} aria-hidden="true" />
+                <p className="flex items-center gap-1.5 text-[13px] text-on-surface-variant mb-2 truncate">
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: campaignColor(item.campaign_id) }} aria-hidden="true" />
                   {item.campaignTitle}
                 </p>
               )}
               {isEditor ? (
-                <div className="flex flex-col gap-1">
-                  <FieldLabel>Title *</FieldLabel>
+                <div className="flex flex-col gap-1.5">
+                  <FieldLabel>Title</FieldLabel>
                   <input
                     ref={titleInputRef}
                     autoFocus
@@ -249,13 +241,13 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
                   />
                 </div>
               ) : (
-                <h2 className="text-base font-bold text-on-surface">{form.title}</h2>
+                <h2 className="text-[22px] text-on-surface">{form.title}</h2>
               )}
             </div>
             <button
               onClick={handleClose}
               aria-label="Close dialog"
-              className="p-1.5 hover:bg-surface-container-high rounded-lg transition-colors flex-shrink-0 text-on-surface-variant"
+              className="h-9 w-9 inline-flex items-center justify-center rounded-full hover:bg-surface-container-low transition-colors flex-shrink-0 text-on-surface-variant"
             >
               <X className="h-4 w-4" />
             </button>
@@ -263,32 +255,26 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
 
           {/* Tabs — show Comments tab only for existing items */}
           {!isNew && (
-            <div className="flex border-b border-border flex-shrink-0 px-5">
-              {(["details", "comments"] as const).map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`flex items-center gap-1.5 pb-2.5 pt-1 mr-5 text-xs font-semibold border-b-2 transition-colors capitalize ${
-                    activeTab === tab
-                      ? "border-primary text-primary"
-                      : "border-transparent text-on-surface-variant hover:text-on-surface"
-                  }`}
-                >
-                  {tab === "comments" && <MessageCircle className="h-3.5 w-3.5" />}
-                  {tab}
-                  {tab === "comments" && comments.length > 0 && (
-                    <span className="ml-0.5 rounded-full bg-surface-container-high text-on-surface-variant text-[10px] font-bold px-1.5 py-0.5 tabular-nums">
-                      {comments.length}
-                    </span>
-                  )}
-                </button>
-              ))}
+            <div className="flex-shrink-0 px-6 pb-4 border-b border-border">
+              <SegmentedControl
+                ariaLabel="Item sections"
+                value={activeTab}
+                onChange={setActiveTab}
+                options={[
+                  { value: "details", label: "Details" },
+                  {
+                    value: "comments",
+                    icon: <MessageCircle className="h-3.5 w-3.5" />,
+                    label: <>Comments{comments.length > 0 && <span className="tabular-nums opacity-70">{comments.length}</span>}</>,
+                  },
+                ]}
+              />
             </div>
           )}
 
           {/* --- DETAILS TAB --- */}
           {activeTab === "details" && (
-            <div className="overflow-y-auto flex flex-col gap-4 px-5 py-4">
+            <div className="overflow-y-auto flex flex-col gap-5 px-6 py-5">
               {/* Campaign selector — also how an existing item is moved to another campaign */}
               <div className="flex flex-col gap-1.5">
                 <FieldLabel>Campaign</FieldLabel>
@@ -367,7 +353,7 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
 
                 {/* Publish date */}
                 <div className="flex flex-col gap-1.5">
-                  <FieldLabel>Publish Date</FieldLabel>
+                  <FieldLabel>Publish date</FieldLabel>
                   {isEditor ? (
                     <input type="date" value={form.publish_date ?? ""}
                       onChange={e => f("publish_date", e.target.value || null)}
@@ -397,7 +383,7 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
                 {isEditor ? (
                   <textarea rows={2} value={form.notes} onChange={e => f("notes", e.target.value)}
                     placeholder="Add context, copy points, references…"
-                    className={`${selectCls()} resize-none`} />
+                    className={textareaCls} />
                 ) : (
                   <p className="text-sm text-on-surface-variant">{form.notes || "—"}</p>
                 )}
@@ -413,9 +399,9 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
                         onChange={e => setForm(prev => ({ ...prev, [field]: e.target.value }))}
                         placeholder="https://…"
                         className={selectCls()} />
-                    ) : form[field] ? (
-                      <a href={form[field]!} target="_blank" rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-sm text-primary hover:underline py-2">
+                    ) : form[field] && /^https?:\/\//i.test(form[field]!.trim()) ? (
+                      <a href={form[field]!.trim()} target="_blank" rel="noopener noreferrer"
+                        className={cx("inline-flex items-center gap-1 text-sm py-2", linkCls)}>
                         Open <ExternalLink className="h-3 w-3" />
                       </a>
                     ) : (
@@ -430,25 +416,20 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
                 <FieldLabel>Audience</FieldLabel>
                 {AUDIENCE_SEGMENT_GROUPS.map(group => (
                   <div key={group.label} className="flex flex-col gap-1.5">
-                    <span className="text-[11px] text-on-surface-variant">{group.label}</span>
+                    <span className="text-xs text-on-surface-variant/80">{group.label}</span>
                     <div className="flex flex-wrap gap-1.5">
                       {group.segments.map(seg => {
                         const on = segments.includes(seg)
                         if (!isEditor && !on) return null
                         return (
-                          <button
+                          <Pill
                             key={seg}
-                            type="button"
-                            disabled={!isEditor}
-                            onClick={() => setSegments(prev => on ? prev.filter(x => x !== seg) : [...prev, seg])}
-                            className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
-                              on
-                                ? "bg-primary text-primary-foreground border-primary"
-                                : "bg-surface-container-low text-on-surface-variant border-outline-variant hover:bg-surface-container-high"
-                            }`}
+                            active={on}
+                            onClick={isEditor ? () => setSegments(prev => on ? prev.filter(x => x !== seg) : [...prev, seg]) : undefined}
+                            className="px-3 py-1 text-[13px]"
                           >
                             {seg}
-                          </button>
+                          </Pill>
                         )
                       })}
                     </div>
@@ -464,13 +445,13 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
                 <div className="flex items-center justify-between">
                   <FieldLabel>Contributors</FieldLabel>
                   {isEditor && (
-                    <button onClick={addContributor} className="text-xs text-primary font-semibold hover:underline">
-                      + Add
+                    <button onClick={addContributor} className={cx("text-[13px]", linkCls)}>
+                      Add
                     </button>
                   )}
                 </div>
                 {contributors.length === 0 && (
-                  <p className="text-xs text-on-surface-variant">No contributors added.</p>
+                  <p className="text-[13px] text-on-surface-variant">No contributors yet.</p>
                 )}
                 {contributors.map((c, i) => (
                   <div key={i} className="flex items-center gap-2">
@@ -479,20 +460,20 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
                         <select
                           value={c.profile_id}
                           onChange={e => setContribs(prev => prev.map((x, j) => j === i ? { ...x, profile_id: e.target.value } : x))}
-                          className="flex-1 px-2.5 py-1.5 rounded-lg border border-outline-variant bg-surface-container text-on-surface text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+                          className={cx(fieldSmCls, "flex-1")}
                         >
                           {profiles.map(p => <option key={p.id} value={p.id}>{p.full_name}</option>)}
                         </select>
                         <select
                           value={c.role}
                           onChange={e => setContribs(prev => prev.map((x, j) => j === i ? { ...x, role: e.target.value as ContributorRole } : x))}
-                          className="w-28 px-2.5 py-1.5 rounded-lg border border-outline-variant bg-surface-container text-on-surface text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+                          className={cx(fieldSmCls, "w-32")}
                         >
                           {CONTRIBUTOR_ROLE_OPTIONS.map(r => <option key={r}>{r}</option>)}
                         </select>
                         <button
                           onClick={() => setContribs(prev => prev.filter((_, j) => j !== i))}
-                          className="p-1 text-on-surface-variant hover:text-red-500 transition-colors"
+                          className="h-8 w-8 inline-flex items-center justify-center rounded-full text-on-surface-variant hover:text-error hover:bg-error-container transition-colors"
                           aria-label="Remove contributor"
                         >
                           <X className="h-3.5 w-3.5" />
@@ -533,7 +514,7 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
                         {isOwn && (
                           <button
                             onClick={() => handleDeleteComment(c.id)}
-                            className="ml-auto opacity-0 group-hover:opacity-100 p-0.5 text-on-surface-variant hover:text-red-500 transition-all"
+                            className="ml-auto opacity-0 group-hover:opacity-100 p-0.5 text-on-surface-variant hover:text-error transition-all"
                             aria-label="Delete comment"
                           >
                             <Trash2 className="h-3 w-3" />
@@ -548,7 +529,7 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
                             <span
                               key={i}
                               className={`font-semibold rounded px-0.5 ${
-                                seg.id === currentUser?.id ? "bg-primary/15 text-primary" : "text-primary"
+                                seg.id === currentUser?.id ? "bg-on-surface/10 text-on-surface" : "text-on-surface underline decoration-on-surface/25 underline-offset-2"
                               }`}
                             >
                               @{seg.name}
@@ -564,7 +545,7 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
 
               {/* Comment input — type @ to mention a teammate */}
               <div className="flex-shrink-0 border-t border-border px-4 py-3 flex flex-col gap-1.5">
-                {commentError && <p className="text-xs text-red-600 font-medium">{commentError}</p>}
+                <ErrorText>{commentError}</ErrorText>
                 <MentionInput onSubmit={handlePostComment} />
               </div>
             </div>
@@ -572,14 +553,13 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
 
           {/* Footer (details tab only) */}
           {activeTab === "details" && isEditor && (
-            <div className="flex flex-col gap-2 px-5 py-4 border-t border-border flex-shrink-0">
-              {error && <p className="text-xs text-red-600 font-medium">{error}</p>}
+            <div className="flex flex-col gap-2 px-6 py-4 border-t border-border flex-shrink-0">
+              <ErrorText>{error}</ErrorText>
               <div className="flex justify-between items-center">
                 {!isNew ? (
-                  <button onClick={() => setConfirmDel(true)}
-                    className="flex items-center gap-1.5 text-sm font-semibold text-red-500 hover:text-red-600 transition-colors">
+                  <Button variant="ghost" size="sm" onClick={() => setConfirmDel(true)} className="text-error hover:text-error hover:bg-error-container -ml-2">
                     <Trash2 className="h-3.5 w-3.5" /> Delete
-                  </button>
+                  </Button>
                 ) : (
                   <label className="flex items-center gap-2 text-sm text-on-surface-variant cursor-pointer select-none">
                     <input
@@ -592,14 +572,10 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
                   </label>
                 )}
                 <div className="flex gap-2">
-                  <button onClick={handleClose}
-                    className="px-3 py-2 rounded-lg text-sm font-semibold border border-outline-variant hover:bg-surface-container-high transition-colors">
-                    Cancel
-                  </button>
-                  <button onClick={handleSave} disabled={saving}
-                    className="px-4 py-2 rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-60 transition-colors">
+                  <Button variant="secondary" onClick={handleClose}>Cancel</Button>
+                  <Button onClick={handleSave} disabled={saving}>
                     {saving ? "Saving…" : isNew ? "Create" : "Save changes"}
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -609,19 +585,13 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
 
       {/* Delete confirm */}
       {confirmDel && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 backdrop-blur-[2px] p-4">
           <div className="bg-background rounded-2xl border border-border p-6 max-w-sm w-full flex flex-col gap-4 shadow-2xl">
-            <h3 className="text-base font-bold text-on-surface">Delete item?</h3>
+            <h3 className="text-[20px] text-on-surface">Delete item?</h3>
             <p className="text-sm text-on-surface-variant">This cannot be undone.</p>
             <div className="flex justify-end gap-3">
-              <button onClick={() => setConfirmDel(false)}
-                className="px-4 py-2 rounded-lg text-sm font-semibold border border-outline-variant hover:bg-surface-container-high transition-colors">
-                Cancel
-              </button>
-              <button onClick={handleDelete}
-                className="px-4 py-2 rounded-lg text-sm font-semibold bg-red-600 text-white hover:bg-red-700 transition-colors">
-                Delete
-              </button>
+              <Button variant="secondary" onClick={() => setConfirmDel(false)}>Cancel</Button>
+              <Button onClick={handleDelete} className="bg-error hover:bg-error/90">Delete</Button>
             </div>
           </div>
         </div>
