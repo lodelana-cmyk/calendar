@@ -1,7 +1,7 @@
 "use client"
 
 import type { ContentItemWithCampaign } from "@/lib/database.types"
-import { CHANNEL_ICONS } from "@/lib/database.types"
+import { CHANNEL_ICONS, campaignColor } from "@/lib/database.types"
 
 interface Props {
   item: ContentItemWithCampaign
@@ -13,8 +13,8 @@ interface Props {
 }
 
 /**
- * Calendar chip — solid ink card with white text. A provisional date shows
- * as a dashed outline instead, and published items are faded.
+ * Calendar chip — filled with its campaign's colour, white text, no border.
+ * A provisional date carries a "TBC" tag; published items are faded.
  */
 export function ContentItemChip({ item, onClick, onDragStart, compact, muted }: Props) {
   const isProvisional = item.date_confidence === "Provisional"
@@ -28,18 +28,19 @@ export function ContentItemChip({ item, onClick, onDragStart, compact, muted }: 
       onDragStart={onDragStart}
       onKeyDown={e => { if (e.key === "Enter") onClick() }}
       title={`${item.title} · ${item.campaignTitle} · ${item.status}${isProvisional ? " (Provisional)" : ""}\nDrag to reschedule`}
-      className={`rounded-lg px-2.5 py-1.5 text-[11.5px] leading-snug font-medium cursor-grab active:cursor-grabbing select-none transition-opacity ${
-        isProvisional
-          ? "border border-dashed border-on-surface/50 text-on-surface hover:bg-surface-container-low"
-          : "bg-primary text-primary-foreground hover:bg-primary/85"
-      } ${item.status === "Published" || muted ? "opacity-50" : ""} ${compact ? "truncate" : ""}`}
+      style={{ backgroundColor: campaignColor(item.campaign_id) }}
+      className={`rounded-lg px-2.5 py-1.5 text-[11.5px] leading-snug font-medium text-white cursor-grab active:cursor-grabbing select-none transition-[filter,opacity] hover:brightness-110 ${
+        item.status === "Published" || muted ? "opacity-50" : ""
+      } ${compact ? "truncate" : ""}`}
     >
       <span className={`block ${compact ? "truncate" : "line-clamp-2"}`}>{item.title}</span>
       {!compact && (
-        <span className={`flex items-center gap-1 mt-0.5 text-[10px] ${isProvisional ? "text-on-surface-variant" : "text-primary-foreground/60"}`}>
+        <span className="flex items-center gap-1 mt-0.5 text-[10px] text-white/75">
           <span aria-hidden="true">{CHANNEL_ICONS[item.channel] || ""}</span>
           <span className="truncate">{item.campaignTitle}</span>
-          {isProvisional && <span className="font-semibold">TBC</span>}
+          {isProvisional && (
+            <span className="ml-auto flex-shrink-0 rounded-full bg-white/20 px-1.5 font-semibold text-white">TBC</span>
+          )}
         </span>
       )}
     </div>

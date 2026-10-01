@@ -276,6 +276,30 @@ export const CAMPAIGN_STATUSES: CampaignStatus[] = ["Active", "On Hold", "Comple
 export const NO_CAMPAIGN_ID = "__no_campaign__"
 export const NO_CAMPAIGN_LABEL = "No campaign"
 
+// Solid card colour per campaign, derived from the id (the stored icon_color is
+// a Tailwind class most campaigns leave at the same default). Every shade is
+// dark enough for white text to stay readable (contrast ≥ 4.5:1).
+const CAMPAIGN_PALETTE = [
+  "#2563eb", // blue
+  "#047857", // emerald
+  "#dc2626", // red
+  "#b45309", // amber
+  "#7c3aed", // violet
+  "#0e7490", // cyan
+  "#be185d", // pink
+  "#4d7c0f", // lime
+  "#c2410c", // orange
+  "#4f46e5", // indigo
+]
+const NO_CAMPAIGN_COLOR = "#57534e"
+
+export function campaignColor(campaignId: string | null | undefined): string {
+  if (!campaignId || campaignId === NO_CAMPAIGN_ID) return NO_CAMPAIGN_COLOR
+  let hash = 0
+  for (let i = 0; i < campaignId.length; i++) hash = (hash * 31 + campaignId.charCodeAt(i)) | 0
+  return CAMPAIGN_PALETTE[Math.abs(hash) % CAMPAIGN_PALETTE.length]
+}
+
 // ---- Misc ----
 export const ICON_COLORS = [
   "bg-indigo-500", "bg-emerald-500", "bg-rose-500", "bg-violet-500",
