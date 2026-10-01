@@ -14,7 +14,7 @@ import type { ContentItemWithCampaign, ItemStatus } from "@/lib/database.types"
 import {
   CHANNEL_ICONS,
   CHANNEL_OPTIONS, MOTION_OPTIONS, STATUS_OPTIONS, PRODUCT_OPTIONS,
-  NO_CAMPAIGN_ID, AUDIENCE_SEGMENTS
+  NO_CAMPAIGN_ID, AUDIENCE_SEGMENTS, campaignColor
 } from "@/lib/database.types"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button, SegmentedControl, buttonCls, cx, fieldSmCls, linkCls } from "@/components/kit"
@@ -504,8 +504,9 @@ export function ContentCalendar() {
                     <span className="flex-1 min-w-0">
                       <span className="block text-sm font-medium text-on-surface truncate">{item.title}</span>
                       {/* On phones the extra columns are hidden, so show them as a sub-line */}
-                      <span className="sm:hidden block text-xs text-on-surface-variant truncate">
-                        {item.campaignTitle} · {CHANNEL_ICONS[item.channel] || ""} {item.channel} · {item.status}
+                      <span className="sm:hidden flex items-center gap-1.5 text-xs text-on-surface-variant min-w-0">
+                        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: campaignColor(item.campaign_id) }} aria-hidden="true" />
+                        <span className="truncate">{item.campaignTitle} · {CHANNEL_ICONS[item.channel] || ""} {item.channel} · {item.status}</span>
                       </span>
                     </span>
                     {(item.audience_segments ?? []).length > 0 && (
@@ -519,8 +520,9 @@ export function ContentCalendar() {
                       </span>
                     )}
                     <span className="text-xs text-on-surface-variant flex-shrink-0">{item.publish_date ? parseDateStr(item.publish_date).toLocaleDateString("en-GB",{day:"numeric",month:"short"}) : ""}</span>
-                    <span className="hidden sm:inline text-xs font-medium px-2.5 py-0.5 rounded-full flex-shrink-0 max-w-[180px] truncate border border-outline-variant text-on-surface">
-                      {item.campaignTitle}
+                    <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-0.5 rounded-full flex-shrink-0 max-w-[200px] border border-outline-variant text-on-surface">
+                      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: campaignColor(item.campaign_id) }} aria-hidden="true" />
+                      <span className="truncate">{item.campaignTitle}</span>
                     </span>
                     <span className="hidden sm:inline text-xs text-on-surface-variant flex-shrink-0 w-20">{item.status}</span>
                     <span className="hidden sm:inline text-xs text-on-surface-variant flex-shrink-0">{CHANNEL_ICONS[item.channel] || ""} {item.channel}</span>

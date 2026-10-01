@@ -2,7 +2,7 @@
 
 import { Calendar, FileText } from "lucide-react"
 import type { CampaignWithItems } from "@/lib/database.types"
-import { MOTION_ACCENTS, TYPE_ACCENTS, CHANNEL_ICONS } from "@/lib/database.types"
+import { MOTION_ACCENTS, TYPE_ACCENTS, CHANNEL_ICONS, campaignColor } from "@/lib/database.types"
 
 interface Props {
   campaign: CampaignWithItems
@@ -54,8 +54,9 @@ export function CampaignCard({ campaign, onClick }: Props) {
             <span className="text-xs text-on-surface-variant font-medium truncate">{campaign.product}</span>
           )}
         </div>
-        <h3 className="text-base font-semibold text-on-surface leading-snug truncate group-hover:text-primary transition-colors">
-          {campaign.title}
+        <h3 className="flex items-center gap-2 text-base font-semibold text-on-surface leading-snug min-w-0">
+          <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: campaignColor(campaign.id) }} aria-hidden="true" />
+          <span className="truncate">{campaign.title}</span>
         </h3>
         {campaign.objective && (
           <p className="text-xs text-on-surface-variant line-clamp-2 leading-relaxed">{campaign.objective}</p>
@@ -88,8 +89,8 @@ export function CampaignCard({ campaign, onClick }: Props) {
         </div>
         <div className="h-1 rounded-full bg-outline-variant overflow-hidden">
           <div
-            className="h-full rounded-full bg-primary transition-all duration-500"
-            style={{ width: `${progress}%` }}
+            className="h-full rounded-full transition-all duration-500"
+            style={{ background: campaignColor(campaign.id), width: `${progress}%` }}
           />
         </div>
       </div>
