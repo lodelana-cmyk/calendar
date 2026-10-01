@@ -76,12 +76,12 @@ export function NotificationBell() {
     <Popover open={open} onOpenChange={o => { setOpen(o); if (o) load() }}>
       <PopoverTrigger asChild>
         <button
-          className="relative h-9 w-9 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          className="relative h-9 w-9 rounded-full flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors"
           aria-label={unread > 0 ? `${unread} unread notifications` : "Notifications"}
         >
           <Bell className="h-5 w-5" />
           {unread > 0 && (
-            <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
+            <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold flex items-center justify-center ring-2 ring-background">
               {unread > 9 ? "9+" : unread}
             </span>
           )}
@@ -97,7 +97,7 @@ export function NotificationBell() {
           )}
         </div>
         {items.length === 0 ? (
-          <p className="px-4 py-8 text-sm text-center text-on-surface-variant">You're all caught up.</p>
+          <p className="px-4 py-8 text-sm text-center text-on-surface-variant">You&apos;re all caught up.</p>
         ) : (
           <ul className="max-h-96 overflow-y-auto divide-y divide-border">
             {items.map(n => (
