@@ -116,7 +116,7 @@ export default function LibraryPage() {
                 </div>
                 <span
                   className="text-xs font-medium px-2 py-0.5 rounded-md max-w-[200px] truncate text-on-surface"
-                  style={{ backgroundColor: `${campaignColor(item.campaign_id)}26` }}
+                  style={{ backgroundColor: `${campaignColor(item.campaign_id)}33` }}
                 >
                   {c.title}
                 </span>
