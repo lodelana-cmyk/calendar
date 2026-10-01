@@ -4,172 +4,171 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Core surface colors */
-  --background: #f8f9fa;
-  --foreground: #2d3335;
-  --surface: #f8f9fa;
-  --surface-dim: #d5dbdd;
-  --surface-bright: #f8f9fa;
-  --surface-container-lowest: #ffffff;
-  --surface-container-low: #f1f4f5;
-  --surface-container: #ebeef0;
-  --surface-container-high: #e5e9eb;
-  --surface-container-highest: #dee3e6;
-  --surface-variant: #dee3e6;
-  --surface-tint: #742fe5;
-  
-  /* On surface colors */
-  --on-surface: #2d3335;
-  --on-surface-variant: #5a6062;
-  --on-background: #2d3335;
-  
-  /* Primary colors */
-  --primary: #742fe5;
-  --primary-dim: #681ad9;
-  --primary-container: #8342f4;
-  --primary-fixed: #8342f4;
-  --primary-fixed-dim: #7632e7;
-  --on-primary: #fdf7ff;
+  /* Editorial monochrome palette — warm off-white paper, near-black ink.
+     Token names are kept from the original theme so component classes
+     don't change; only the values do. Note the surface-container scale is
+     ordered by how components use it, not strictly by lightness:
+     -container is the (slightly lighter) input fill, -container-low is the
+     (slightly darker) panel / hover / table-header tone. */
+  --background: #f1f0ed;
+  --foreground: #141414;
+  --surface: #f1f0ed;
+  --surface-dim: #e4e2dd;
+  --surface-bright: #f7f6f3;
+  --surface-container-lowest: #faf9f7;
+  --surface-container-low: #e9e8e4;
+  --surface-container: #f6f5f2;
+  --surface-container-high: #e4e2dd;
+  --surface-container-highest: #dad8d3;
+  --surface-variant: #e4e2dd;
+  --surface-tint: #141414;
+
+  --on-surface: #141414;
+  --on-surface-variant: #6e6c68;
+  --on-background: #141414;
+
+  /* Primary = ink. Buttons and selected states are near-black pills. */
+  --primary: #141414;
+  --primary-dim: #000000;
+  --primary-container: #2a2a29;
+  --primary-fixed: #2a2a29;
+  --primary-fixed-dim: #1f1f1e;
+  --on-primary: #ffffff;
   --on-primary-container: #ffffff;
   --on-primary-fixed: #ffffff;
-  --on-primary-fixed-variant: #e5d5ff;
-  
-  /* Secondary colors */
-  --secondary: #5d5d72;
-  --secondary-dim: #515166;
-  --secondary-container: #e2e0f9;
-  --secondary-fixed: #e2e0f9;
-  --secondary-fixed-dim: #d4d2eb;
-  --on-secondary: #fbf7ff;
-  --on-secondary-container: #505064;
-  --on-secondary-fixed: #3d3e51;
-  --on-secondary-fixed-variant: #5a5a6f;
-  
-  /* Tertiary colors */
-  --tertiary: #745479;
-  --tertiary-dim: #67486c;
-  --tertiary-container: #f5cdf9;
-  --tertiary-fixed: #f5cdf9;
-  --tertiary-fixed-dim: #e7bfea;
-  --on-tertiary: #fff7fb;
-  --on-tertiary-container: #604266;
-  --on-tertiary-fixed: #4c2f52;
-  --on-tertiary-fixed-variant: #6a4b70;
-  
-  /* Error colors */
-  --error: #a8364b;
-  --error-dim: #6b0221;
-  --error-container: #f97386;
-  --on-error: #fff7f7;
-  --on-error-container: #6e0523;
-  
-  /* Inverse colors */
-  --inverse-surface: #0c0f10;
-  --inverse-on-surface: #9b9d9e;
-  --inverse-primary: #a476ff;
-  
-  /* Outline colors */
-  --outline: #767c7e;
-  --outline-variant: #adb3b5;
-  
-  /* Legacy shadcn tokens mapped */
-  --card: #ffffff;
-  --card-foreground: #2d3335;
-  --popover: #ffffff;
-  --popover-foreground: #2d3335;
-  --primary-foreground: #fdf7ff;
-  --secondary-foreground: #fbf7ff;
-  --muted: #ebeef0;
-  --muted-foreground: #5a6062;
-  --accent: #e2e0f9;
-  --accent-foreground: #505064;
-  --destructive: #a8364b;
-  --destructive-foreground: #fff7f7;
-  --border: #dee3e6;
-  --input: #dee3e6;
-  --ring: #742fe5;
-  
-  --radius: 1rem;
-  
-  /* Sidebar */
-  --sidebar: rgba(255, 255, 255, 0.8);
-  --sidebar-foreground: #2d3335;
-  --sidebar-primary: #742fe5;
-  --sidebar-primary-foreground: #fdf7ff;
-  --sidebar-accent: #e2e0f9;
-  --sidebar-accent-foreground: #505064;
-  --sidebar-border: #dee3e6;
-  --sidebar-ring: #742fe5;
+  --on-primary-fixed-variant: #d9d7d2;
+
+  --secondary: #5c5a56;
+  --secondary-dim: #4a4845;
+  --secondary-container: #e4e2dd;
+  --secondary-fixed: #e4e2dd;
+  --secondary-fixed-dim: #d6d4cf;
+  --on-secondary: #ffffff;
+  --on-secondary-container: #3b3a37;
+  --on-secondary-fixed: #2a2a29;
+  --on-secondary-fixed-variant: #5c5a56;
+
+  --tertiary: #5c5a56;
+  --tertiary-dim: #4a4845;
+  --tertiary-container: #e4e2dd;
+  --tertiary-fixed: #e4e2dd;
+  --tertiary-fixed-dim: #d6d4cf;
+  --on-tertiary: #ffffff;
+  --on-tertiary-container: #3b3a37;
+  --on-tertiary-fixed: #2a2a29;
+  --on-tertiary-fixed-variant: #5c5a56;
+
+  /* The one colour besides campaign tints: a muted red for errors/danger. */
+  --error: #b3261e;
+  --error-dim: #8c1d17;
+  --error-container: #f6e3e1;
+  --on-error: #ffffff;
+  --on-error-container: #8c1d17;
+
+  --inverse-surface: #141414;
+  --inverse-on-surface: #f1f0ed;
+  --inverse-primary: #f1f0ed;
+
+  --outline: #8d8a85;
+  --outline-variant: #d6d4cf;
+
+  --card: #faf9f7;
+  --card-foreground: #141414;
+  --popover: #faf9f7;
+  --popover-foreground: #141414;
+  --primary-foreground: #ffffff;
+  --secondary-foreground: #ffffff;
+  --muted: #e9e8e4;
+  --muted-foreground: #6e6c68;
+  --accent: #e4e2dd;
+  --accent-foreground: #141414;
+  --destructive: #b3261e;
+  --destructive-foreground: #ffffff;
+  --border: #dfddd8;
+  --input: #d6d4cf;
+  --ring: #141414;
+
+  --radius: 0.625rem;
+
+  --sidebar: #f1f0ed;
+  --sidebar-foreground: #141414;
+  --sidebar-primary: #141414;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e4e2dd;
+  --sidebar-accent-foreground: #141414;
+  --sidebar-border: #dfddd8;
+  --sidebar-ring: #141414;
 }
 
+/* Not switched on anywhere; kept in step with the light palette. */
 .dark {
-  --background: #0c0f10;
-  --foreground: #dee3e6;
-  --surface: #0c0f10;
-  --surface-dim: #0c0f10;
-  --surface-bright: #2d3335;
-  --surface-container-lowest: #050708;
-  --surface-container-low: #141719;
-  --surface-container: #1d2123;
-  --surface-container-high: #272b2d;
-  --surface-container-highest: #323637;
-  --surface-variant: #323637;
-  --on-surface: #dee3e6;
-  --on-surface-variant: #9b9d9e;
-  --on-background: #dee3e6;
-  
-  --primary: #a476ff;
-  --primary-dim: #8f5df0;
-  --primary-container: #5a1cc4;
-  --on-primary: #1a0044;
-  --on-primary-container: #e5d5ff;
-  
-  --secondary: #d4d2eb;
-  --secondary-container: #505064;
-  --on-secondary: #3d3e51;
-  --on-secondary-container: #e2e0f9;
-  
-  --error: #f97386;
-  --on-error: #4d0016;
-  
-  --inverse-surface: #dee3e6;
-  --inverse-on-surface: #2d3335;
-  --inverse-primary: #742fe5;
-  
-  --outline: #9b9d9e;
-  --outline-variant: #5a6062;
-  
-  --card: #141719;
-  --card-foreground: #dee3e6;
-  --popover: #141719;
-  --popover-foreground: #dee3e6;
-  --primary-foreground: #1a0044;
-  --secondary-foreground: #3d3e51;
-  --muted: #272b2d;
-  --muted-foreground: #9b9d9e;
-  --accent: #505064;
-  --accent-foreground: #e2e0f9;
-  --destructive: #f97386;
-  --destructive-foreground: #4d0016;
-  --border: #323637;
-  --input: #323637;
-  --ring: #a476ff;
-  
-  --sidebar: rgba(20, 23, 25, 0.8);
-  --sidebar-foreground: #dee3e6;
-  --sidebar-primary: #a476ff;
-  --sidebar-primary-foreground: #1a0044;
-  --sidebar-accent: #505064;
-  --sidebar-accent-foreground: #e2e0f9;
-  --sidebar-border: #323637;
-  --sidebar-ring: #a476ff;
+  --background: #141413;
+  --foreground: #ecebe8;
+  --surface: #141413;
+  --surface-dim: #141413;
+  --surface-bright: #2a2a28;
+  --surface-container-lowest: #1b1b1a;
+  --surface-container-low: #232321;
+  --surface-container: #1e1e1d;
+  --surface-container-high: #2c2c2a;
+  --surface-container-highest: #363634;
+  --surface-variant: #2c2c2a;
+  --on-surface: #ecebe8;
+  --on-surface-variant: #a19f9a;
+  --on-background: #ecebe8;
+
+  --primary: #ecebe8;
+  --primary-dim: #ffffff;
+  --primary-container: #d6d4cf;
+  --on-primary: #141413;
+  --on-primary-container: #141413;
+
+  --secondary: #a19f9a;
+  --secondary-container: #2c2c2a;
+  --on-secondary: #141413;
+  --on-secondary-container: #ecebe8;
+
+  --error: #f2a49d;
+  --error-container: #3a1a17;
+  --on-error: #141413;
+
+  --inverse-surface: #ecebe8;
+  --inverse-on-surface: #141413;
+  --inverse-primary: #141413;
+
+  --outline: #77756f;
+  --outline-variant: #3b3a37;
+
+  --card: #1b1b1a;
+  --card-foreground: #ecebe8;
+  --popover: #1b1b1a;
+  --popover-foreground: #ecebe8;
+  --primary-foreground: #141413;
+  --secondary-foreground: #141413;
+  --muted: #232321;
+  --muted-foreground: #a19f9a;
+  --accent: #2c2c2a;
+  --accent-foreground: #ecebe8;
+  --destructive: #f2a49d;
+  --destructive-foreground: #141413;
+  --border: #2f2f2d;
+  --input: #3b3a37;
+  --ring: #ecebe8;
+
+  --sidebar: #141413;
+  --sidebar-foreground: #ecebe8;
+  --sidebar-primary: #ecebe8;
+  --sidebar-primary-foreground: #141413;
+  --sidebar-accent: #2c2c2a;
+  --sidebar-accent-foreground: #ecebe8;
+  --sidebar-border: #2f2f2d;
+  --sidebar-ring: #ecebe8;
 }
 
 @theme inline {
-  --font-sans: 'Inter', 'Inter Fallback', sans-serif;
-  --font-headline: 'Manrope', 'Manrope Fallback', sans-serif;
-  --font-body: 'Inter', 'Inter Fallback', sans-serif;
-  --font-label: 'Inter', 'Inter Fallback', sans-serif;
+  /* next/font registers Inter under a hashed family name exposed as
+     --font-inter; referencing the literal 'Inter' never loaded it. */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -247,12 +246,12 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   
-  --radius-sm: calc(var(--radius) - 8px);
-  --radius-md: calc(var(--radius) - 4px);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 8px);
-  --radius-2xl: calc(var(--radius) + 16px);
-  --radius-3xl: calc(var(--radius) + 32px);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 16px);
   
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
@@ -269,18 +268,13 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
-    font-family: 'Inter', sans-serif;
-    letter-spacing: 0.02em;
-    line-height: 1.6;
+    @apply bg-background text-foreground font-sans;
+    letter-spacing: -0.006em;
+    line-height: 1.5;
   }
   h1, h2, h3, .headline {
-    font-family: 'Manrope', sans-serif;
-    letter-spacing: -0.02em;
+    font-weight: 600;
+    letter-spacing: -0.028em;
+    line-height: 1.15;
   }
-}
-
-/* Glass sidebar effect */
-.glass-sidebar {
-  backdrop-filter: blur(30px);
 }
