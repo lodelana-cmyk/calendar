@@ -6,7 +6,7 @@ import { MOTION_OPTIONS, CHANNEL_OPTIONS, PRODUCT_OPTIONS } from "@/lib/database
 import { Button, Field, PageHeader, Pill, Section, fieldCls } from "@/components/kit"
 
 export default function SettingsPage() {
-  const [workspaceName, setWorkspaceName] = useState("The Editorial Studio")
+  const [workspaceName, setWorkspaceName] = useState("Content Calendar")
   const [saved, setSaved]     = useState(false)
 
   const handleSave = () => {
