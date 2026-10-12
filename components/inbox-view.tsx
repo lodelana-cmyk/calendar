@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
-import { Lightbulb, Megaphone, CalendarPlus, Trash2, Send } from "lucide-react"
+import { useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
+import { Lightbulb, Megaphone, CalendarPlus, Trash2, Send, MessageCircle, FileText } from "lucide-react"
 import { useStore, useIsEditor } from "@/lib/store"
 import { useRefreshData } from "@/components/data-provider"
 import {
@@ -13,6 +14,7 @@ import {
 } from "@/lib/data-client"
 import type { IdeaWithCreator } from "@/lib/database.types"
 import { CreateCampaignDialog } from "@/components/create-campaign-dialog"
+import { IdeaDialog } from "@/components/idea-dialog"
 
 function timeAgo(iso: string) {
   const diffMs = Date.now() - new Date(iso).getTime()
@@ -38,6 +40,14 @@ export function InboxView({ initialIdeas }: { initialIdeas: IdeaWithCreator[] })
   const [busyId, setBusyId] = useState<string | null>(null)
   const [confirmDiscardId, setConfirmDiscardId] = useState<string | null>(null)
   const [promoteIdea, setPromoteIdea] = useState<IdeaWithCreator | null>(null)
+  const [openIdeaId, setOpenIdeaId] = useState<string | null>(null)
+  const openIdea = openIdeaId ? ideas.find(i => i.id === openIdeaId) ?? null : null
+
+  // Deep link from a notification: /inbox?idea=<id>
+  const ideaParam = useSearchParams().get("idea")
+  useEffect(() => {
+    if (ideaParam && ideas.some(i => i.id === ideaParam)) setOpenIdeaId(ideaParam)
+  }, [ideaParam, ideas])
 
   const reload = async () => setIdeas(await getIdeasClient())
 
@@ -132,17 +142,21 @@ export function InboxView({ initialIdeas }: { initialIdeas: IdeaWithCreator[] })
               key={idea.id}
               className="rounded-2xl border border-border bg-card px-4 py-3 flex flex-col gap-2"
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-on-surface text-pretty">{idea.title}</p>
-                  {idea.notes && (
-                    <p className="text-xs text-on-surface-variant mt-0.5 line-clamp-2">{idea.notes}</p>
-                  )}
-                  <p className="text-[11px] text-on-surface-variant mt-1">
-                    {idea.createdBy?.full_name ?? "Someone"} &middot; {timeAgo(idea.created_at)}
-                  </p>
-                </div>
-              </div>
+              <button
+                type="button"
+                onClick={() => setOpenIdeaId(idea.id)}
+                className="text-left min-w-0 -mx-1 px-1 rounded-lg hover:bg-surface-container-low/60 transition-colors"
+              >
+                <p className="text-sm font-semibold text-on-surface text-pretty">{idea.title}</p>
+                {idea.notes && (
+                  <p className="text-xs text-on-surface-variant mt-0.5 line-clamp-2">{idea.notes}</p>
+                )}
+                <p className="flex items-center gap-2 text-[11px] text-on-surface-variant mt-1">
+                  <span>{idea.createdBy?.full_name ?? "Someone"} &middot; {timeAgo(idea.created_at)}</span>
+                  {idea.brief_url && <span className="inline-flex items-center gap-1"><FileText className="h-3 w-3" /> Doc</span>}
+                  <span className="inline-flex items-center gap-1"><MessageCircle className="h-3 w-3" /> Open to comment</span>
+                </p>
+              </button>
 
               {isEditor && (
                 <div className="flex items-center gap-2 flex-wrap">
@@ -177,6 +191,10 @@ export function InboxView({ initialIdeas }: { initialIdeas: IdeaWithCreator[] })
         </ul>
       )}
 
+      {openIdea && (
+        <IdeaDialog idea={openIdea} onClose={() => setOpenIdeaId(null)} onSaved={reload} />
+      )}
+
       {/* Promote to campaign — reuses the New Campaign dialog, pre-filled */}
       {promoteIdea && (
         <CreateCampaignDialog
@@ -196,7 +214,7 @@ export function InboxView({ initialIdeas }: { initialIdeas: IdeaWithCreator[] })
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 p-4 backdrop-blur-[2px]">
           <div className="bg-background rounded-2xl border border-border p-6 max-w-sm w-full flex flex-col gap-4 shadow-2xl">
             <h3 className="text-base font-bold text-on-surface">Discard idea?</h3>
-            <p className="text-sm text-on-surface-variant">This cannot be undone.</p>
+            <p className="text-sm text-on-surface-variant">This deletes the idea and its comments. It cannot be undone.</p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setConfirmDiscardId(null)}

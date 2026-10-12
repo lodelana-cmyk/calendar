@@ -1,7 +1,8 @@
 "use client"
 
 import type { ContentItemWithCampaign } from "@/lib/database.types"
-import { CHANNEL_ICONS, campaignColor, channelBackground } from "@/lib/database.types"
+import { campaignColor, channelBackground } from "@/lib/database.types"
+import { ChannelIcon } from "@/components/channel-icon"
 
 interface Props {
   item: ContentItemWithCampaign
@@ -14,14 +15,13 @@ interface Props {
 
 /**
  * Calendar chip — filled with its channel's colour (YouTube red, LinkedIn
- * blue, …), white text, no border. Top line spells out the channel; the
- * bottom line names the campaign with its campaign-colour dot, matching the
- * campaign dots elsewhere. Provisional dates get a "TBC" tag; published
- * items are faded.
+ * blue, …), white text, no border. Title is capped at two lines (full title
+ * on hover); the bottom line has the campaign dot + name and the platform
+ * icon on the right. Provisional dates get a "TBC" tag; published items are
+ * faded.
  */
 export function ContentItemChip({ item, onClick, onDragStart, compact, muted }: Props) {
   const isProvisional = item.date_confidence === "Provisional"
-  const channel = `${CHANNEL_ICONS[item.channel] ? CHANNEL_ICONS[item.channel] + " " : ""}${item.channel}`
 
   return (
     <div
@@ -37,25 +37,21 @@ export function ContentItemChip({ item, onClick, onDragStart, compact, muted }: 
         item.status === "Published" || muted ? "opacity-50" : ""
       }`}
     >
+      <span className={`text-[12px] font-medium leading-snug break-words ${compact ? "block truncate" : "line-clamp-2"}`}>{item.title}</span>
       {!compact && (
-        <span className="flex items-center gap-1 mb-1">
-          <span className="inline-flex items-center rounded-full bg-white/25 px-2 py-px text-[10.5px] font-semibold leading-4 truncate">
-            {channel}
-          </span>
-          {isProvisional && (
-            <span className="ml-auto flex-shrink-0 rounded-full bg-black/20 px-1.5 text-[10px] font-semibold leading-4">TBC</span>
-          )}
-        </span>
-      )}
-      <span className={`block text-[12px] font-medium leading-snug ${compact ? "truncate" : "line-clamp-2"}`}>{item.title}</span>
-      {!compact && (
-        <span className="flex items-center gap-1.5 mt-1 text-[10.5px] font-medium leading-tight text-white/90 min-w-0">
+        <span className="flex items-center gap-1.5 mt-1.5 text-[10.5px] font-medium leading-tight text-white/90 min-w-0">
           <span
             className="w-2 h-2 rounded-full flex-shrink-0 ring-[1.5px] ring-white/90"
             style={{ background: campaignColor(item.campaign_id) }}
             aria-hidden="true"
           />
-          <span className="truncate">{item.campaignTitle}</span>
+          <span className="truncate flex-1 min-w-0">{item.campaignTitle}</span>
+          {isProvisional && (
+            <span className="flex-shrink-0 rounded-full bg-black/20 px-1.5 text-[10px] font-semibold leading-4">TBC</span>
+          )}
+          <span className="flex-shrink-0" aria-label={item.channel}>
+            <ChannelIcon channel={item.channel} />
+          </span>
         </span>
       )}
     </div>

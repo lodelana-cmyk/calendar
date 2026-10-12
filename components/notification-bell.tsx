@@ -25,7 +25,7 @@ function timeAgo(iso: string) {
 function hrefFor(n: AppNotification) {
   if (!n.item_id) return "/"
   const isIdea = n.item && n.item.campaign_id === null && n.item.status === "Idea"
-  return isIdea ? "/inbox" : `/?item=${n.item_id}`
+  return isIdea ? `/inbox?idea=${n.item_id}` : `/?item=${n.item_id}`
 }
 
 export function NotificationBell() {
