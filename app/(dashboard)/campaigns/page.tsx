@@ -50,6 +50,7 @@ export default function CampaignsPage() {
           </p>
         </div>
         <button
+          data-tour="campaigns-new"
           onClick={() => setCreateOpen(true)}
           className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/85 transition-colors flex-shrink-0"
         >

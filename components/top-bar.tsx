@@ -3,12 +3,13 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { User, Settings, LogOut } from "lucide-react"
+import { User, Settings, LogOut, Compass } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useStore } from "@/lib/store"
 import { NotificationBell } from "@/components/notification-bell"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cx } from "@/components/kit"
+import { OPEN_GUIDE_EVENT } from "@/components/onboarding-tour"
 
 const NAV = [
   { label: "Inbox",     href: "/inbox" },
@@ -48,6 +49,7 @@ export function TopBar() {
 
         <nav
           aria-label="Main"
+          data-tour="nav"
           className="col-span-2 row-start-2 md:col-span-1 md:row-start-1 md:col-start-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           <div className="inline-flex items-center gap-0.5 p-1 rounded-full border border-outline-variant">
@@ -68,10 +70,19 @@ export function TopBar() {
         </nav>
 
         <div className="justify-self-end row-start-1 col-start-2 md:col-start-3 flex items-center gap-1">
-          <NotificationBell />
+          <button
+            data-tour="guide"
+            onClick={() => window.dispatchEvent(new Event(OPEN_GUIDE_EVENT))}
+            className="h-9 px-3 inline-flex items-center gap-1.5 rounded-full text-sm font-medium text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors"
+          >
+            <Compass className="h-4 w-4" />
+            <span className="hidden sm:inline">Guide</span>
+          </button>
+          <span data-tour="bell" className="inline-flex"><NotificationBell /></span>
           <Popover open={menuOpen} onOpenChange={setMenuOpen}>
             <PopoverTrigger asChild>
               <button
+                data-tour="account"
                 className="h-9 w-9 rounded-full overflow-hidden border border-outline-variant hover:border-on-surface/30 transition-colors"
                 aria-label="Account menu"
               >
