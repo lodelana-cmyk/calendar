@@ -545,6 +545,7 @@ export function ContentCalendar() {
     if (!unscheduled.length) return null
     return (
       <div
+        data-tour="cal-unscheduled"
         className="rounded-xl border border-dashed border-outline-variant overflow-hidden"
         onDragOver={e => { e.preventDefault(); setDragOverDate("__unscheduled__") }}
         onDragLeave={() => { if (dragOverDate === "__unscheduled__") setDragOverDate(null) }}
@@ -602,7 +603,7 @@ export function ContentCalendar() {
         </div>
 
         {/* Phones always show the list, so the switcher is desktop-only */}
-        <div className="hidden md:block">
+        <div className="hidden md:block" data-tour="cal-views">
           <SegmentedControl
             ariaLabel="Calendar view"
             value={view}
@@ -619,6 +620,7 @@ export function ContentCalendar() {
         <Popover>
           <PopoverTrigger asChild>
             <button
+              data-tour="cal-filters"
               className={cx(
                 "inline-flex items-center gap-1.5 h-10 px-4 rounded-full border text-sm font-medium transition-colors",
                 activeFilterCount > 0
@@ -666,6 +668,7 @@ export function ContentCalendar() {
 
         <div className="flex-1" />
 
+        <div className="flex items-center gap-2" data-tour="cal-actions">
         <Button onClick={() => openNew("")}>
           <Plus className="h-4 w-4" />
           <span className="hidden sm:inline">Add item</span>
@@ -678,6 +681,7 @@ export function ContentCalendar() {
           <Download className="h-4 w-4" />
           <span className="hidden sm:inline">Export</span>
         </Button>
+        </div>
       </div>
 
       {/* Calendar body */}
@@ -747,7 +751,7 @@ export function ContentCalendar() {
               </div>
             ))}
             {/* Colour key — card colour = channel */}
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 lg:ml-auto self-center" aria-label="Channel colours">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 lg:ml-auto self-center" aria-label="Channel colours" data-tour="cal-key">
               {CHANNEL_OPTIONS.filter(c => c !== "Other").map(c => (
                 <span key={c} className="inline-flex items-center gap-1.5 text-xs text-on-surface-variant">
                   <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: channelBackground(c) }} aria-hidden="true" />

@@ -69,7 +69,7 @@ export default function TeamPage() {
 
           <div className="flex flex-col gap-4">
             <h2 className="text-[22px] text-on-surface">People</h2>
-            <div className="rounded-2xl border border-border bg-surface-bright overflow-x-auto">
+            <div data-tour="team-table" className="rounded-2xl border border-border bg-surface-bright overflow-x-auto">
               <table className="w-full text-sm min-w-[640px]">
                 <thead>
                   <tr className="bg-surface-container-low text-left text-[13px] text-on-surface-variant">

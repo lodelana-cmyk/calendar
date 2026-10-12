@@ -25,6 +25,7 @@ export function ContentItemChip({ item, onClick, onDragStart, compact, muted }: 
 
   return (
     <div
+      data-tour="cal-card"
       role="button"
       tabIndex={0}
       draggable

@@ -35,6 +35,7 @@ export function CampaignCard({ campaign, onClick }: Props) {
   return (
     <button
       onClick={onClick}
+      data-tour="campaign-card"
       className="w-full text-left rounded-xl border border-border bg-card hover:border-outline hover:shadow-sm transition-all group p-5 flex flex-col gap-4"
     >
       {/* Header */}

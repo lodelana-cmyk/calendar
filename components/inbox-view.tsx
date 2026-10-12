@@ -94,7 +94,7 @@ export function InboxView({ initialIdeas }: { initialIdeas: IdeaWithCreator[] })
   return (
     <div className="flex flex-col gap-5 max-w-2xl">
       {/* Quick-add bar */}
-      <div className="rounded-2xl border border-border bg-surface-container-low p-3 flex flex-col gap-2">
+      <div data-tour="inbox-capture" className="rounded-2xl border border-border bg-surface-container-low p-3 flex flex-col gap-2">
         <div className="flex items-center gap-2">
           <input
             value={title}
@@ -140,6 +140,7 @@ export function InboxView({ initialIdeas }: { initialIdeas: IdeaWithCreator[] })
           {ideas.map(idea => (
             <li
               key={idea.id}
+              data-tour="inbox-idea"
               className="rounded-2xl border border-border bg-card px-4 py-3 flex flex-col gap-2"
             >
               <button
