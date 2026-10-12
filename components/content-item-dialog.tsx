@@ -10,6 +10,7 @@ import {
 import { useRefreshData } from "@/components/data-provider"
 import { CreateCampaignDialog } from "@/components/create-campaign-dialog"
 import { MentionInput } from "@/components/mention-input"
+import { GoogleDocEmbed } from "@/components/google-doc-embed"
 import { parseMentions } from "@/lib/mentions"
 import {
   Button, ErrorText, Label, Pill, SegmentedControl, cx, fieldCls, fieldSmCls, linkCls, textareaCls,
@@ -410,6 +411,8 @@ export function ContentItemDialog({ item, open, onOpenChange, defaultDate, defau
                   </div>
                 ))}
               </div>
+
+              <GoogleDocEmbed url={form.brief_url} />
 
               {/* Audience segments */}
               <div className="flex flex-col gap-2">
