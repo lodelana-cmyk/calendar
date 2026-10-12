@@ -1,7 +1,7 @@
 "use client"
 
 import type { ContentItemWithCampaign } from "@/lib/database.types"
-import { CHANNEL_ICONS, campaignColor } from "@/lib/database.types"
+import { CHANNEL_ICONS, campaignColor, channelBackground } from "@/lib/database.types"
 
 interface Props {
   item: ContentItemWithCampaign
@@ -13,10 +13,11 @@ interface Props {
 }
 
 /**
- * Calendar chip — filled with its campaign's colour, white text, no border.
- * Top line spells out the channel ("✍ Blog") so the type is obvious; the
- * bottom line names the campaign. Provisional dates get a "TBC" tag;
- * published items are faded.
+ * Calendar chip — filled with its channel's colour (YouTube red, LinkedIn
+ * blue, …), white text, no border. Top line spells out the channel; the
+ * bottom line names the campaign with its campaign-colour dot, matching the
+ * campaign dots elsewhere. Provisional dates get a "TBC" tag; published
+ * items are faded.
  */
 export function ContentItemChip({ item, onClick, onDragStart, compact, muted }: Props) {
   const isProvisional = item.date_confidence === "Provisional"
@@ -31,7 +32,7 @@ export function ContentItemChip({ item, onClick, onDragStart, compact, muted }: 
       onDragStart={onDragStart}
       onKeyDown={e => { if (e.key === "Enter") onClick() }}
       title={`${item.channel} · ${item.title}\nCampaign: ${item.campaignTitle} · ${item.status}${isProvisional ? " (Provisional)" : ""}\nDrag to reschedule`}
-      style={{ backgroundColor: campaignColor(item.campaign_id) }}
+      style={{ background: channelBackground(item.channel) }}
       className={`rounded-lg px-2.5 py-2 text-white cursor-grab active:cursor-grabbing select-none transition-[filter,opacity] hover:brightness-110 ${
         item.status === "Published" || muted ? "opacity-50" : ""
       }`}
@@ -48,7 +49,14 @@ export function ContentItemChip({ item, onClick, onDragStart, compact, muted }: 
       )}
       <span className={`block text-[12px] font-medium leading-snug ${compact ? "truncate" : "line-clamp-2"}`}>{item.title}</span>
       {!compact && (
-        <span className="block mt-1 text-[10.5px] font-medium leading-tight text-white/85 truncate">{item.campaignTitle}</span>
+        <span className="flex items-center gap-1.5 mt-1 text-[10.5px] font-medium leading-tight text-white/90 min-w-0">
+          <span
+            className="w-2 h-2 rounded-full flex-shrink-0 ring-[1.5px] ring-white/90"
+            style={{ background: campaignColor(item.campaign_id) }}
+            aria-hidden="true"
+          />
+          <span className="truncate">{item.campaignTitle}</span>
+        </span>
       )}
     </div>
   )

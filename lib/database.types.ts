@@ -214,6 +214,30 @@ export const CHANNEL_ICONS: Record<string, string> = {
   Other:     "·",
 }
 
+/**
+ * Card colour per channel. Real platforms use their brand colour; the rest
+ * are picked to be distinct from those. Every value carries white text, so
+ * each is dark enough for 4.5:1 contrast (YouTube is a touch deeper than
+ * pure #ff0000 for that reason). Values are CSS backgrounds, so Instagram
+ * can use its gradient.
+ */
+export const CHANNEL_COLORS: Record<string, string> = {
+  YouTube:     "#e00000",
+  Instagram:   "linear-gradient(135deg, #f58529 0%, #dd2a7b 45%, #8134af 75%, #515bd4 100%)",
+  LinkedIn:    "#0a66c2",
+  TikTok:      "#fe2c55",
+  "Twitter/X": "#0f1419",
+  Blog:        "#15803d",
+  Email:       "#b45309",
+  Podcast:     "#8b2fc9",
+  Webinar:     "#0e7490",
+  Other:       "#57534e",
+}
+
+export function channelBackground(channel: string | null | undefined): string {
+  return (channel && CHANNEL_COLORS[channel]) || CHANNEL_COLORS.Other
+}
+
 // ---- Option lists ----
 export const TYPE_OPTIONS: CampaignType[] = ["Pillar", "Launch", "Always-on"]
 

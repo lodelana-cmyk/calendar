@@ -14,7 +14,7 @@ import type { ContentItemWithCampaign, ItemStatus } from "@/lib/database.types"
 import {
   CHANNEL_ICONS,
   CHANNEL_OPTIONS, MOTION_OPTIONS, STATUS_OPTIONS, PRODUCT_OPTIONS,
-  NO_CAMPAIGN_ID, AUDIENCE_SEGMENTS, campaignColor
+  NO_CAMPAIGN_ID, AUDIENCE_SEGMENTS, campaignColor, channelBackground
 } from "@/lib/database.types"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button, SegmentedControl, buttonCls, cx, fieldSmCls, linkCls } from "@/components/kit"
@@ -525,7 +525,10 @@ export function ContentCalendar() {
                       <span className="truncate">{item.campaignTitle}</span>
                     </span>
                     <span className="hidden sm:inline text-xs text-on-surface-variant flex-shrink-0 w-20">{item.status}</span>
-                    <span className="hidden sm:inline text-xs text-on-surface-variant flex-shrink-0">{CHANNEL_ICONS[item.channel] || ""} {item.channel}</span>
+                    <span className="hidden sm:inline-flex items-center gap-1.5 text-xs text-on-surface-variant flex-shrink-0">
+                      <span className="w-2 h-2 rounded-full" style={{ background: channelBackground(item.channel) }} aria-hidden="true" />
+                      {item.channel}
+                    </span>
                   </button>
                 </div>
               ))}
@@ -743,6 +746,15 @@ export function ContentCalendar() {
                 <span className="text-[13px] text-on-surface-variant">{s.label}</span>
               </div>
             ))}
+            {/* Colour key — card colour = channel */}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 lg:ml-auto self-center" aria-label="Channel colours">
+              {CHANNEL_OPTIONS.filter(c => c !== "Other").map(c => (
+                <span key={c} className="inline-flex items-center gap-1.5 text-xs text-on-surface-variant">
+                  <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: channelBackground(c) }} aria-hidden="true" />
+                  {c}
+                </span>
+              ))}
+            </div>
           </div>
         )
       })()}
