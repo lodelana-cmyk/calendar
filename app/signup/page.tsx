@@ -102,7 +102,7 @@ export default function SignUpPage() {
     <div className="min-h-screen bg-surface flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <div className="text-center mb-10">
-          <h1 className="text-[28px] font-semibold text-on-surface tracking-tight">The Editorial Studio</h1>
+          <h1 className="text-[28px] font-semibold text-on-surface tracking-tight">Content Calendar</h1>
           <p className="text-sm text-on-surface-variant mt-2">Video Operations Dashboard</p>
         </div>
 

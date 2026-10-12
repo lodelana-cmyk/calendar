@@ -43,7 +43,7 @@ export function TopBar() {
     <header className="sticky top-0 z-40 bg-background/90 backdrop-blur-md border-b border-border">
       <div className="px-4 sm:px-6 lg:px-8 py-2.5 grid grid-cols-[auto_1fr] md:grid-cols-[1fr_auto_1fr] items-center gap-x-4 gap-y-2">
         <Link href="/" className="justify-self-start text-[15px] font-semibold tracking-tight text-on-surface whitespace-nowrap">
-          Editorial Studio
+          Content Calendar
         </Link>
 
         <nav

@@ -10,8 +10,15 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'The Editorial Studio | Weekly Operations Command Center',
-  description: 'Video Operations Dashboard - Manage projects, team workload, and deadlines',
+  title: 'Content Calendar',
+  description: 'Plan every campaign, channel and publish date in one place.',
+  openGraph: {
+    title: 'Content Calendar',
+    description: 'Plan every campaign, channel and publish date in one place.',
+    siteName: 'Content Calendar',
+    type: 'website',
+  },
+  twitter: { card: 'summary_large_image' },
 }
 
 export const viewport: Viewport = {

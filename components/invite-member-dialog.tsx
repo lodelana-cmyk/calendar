@@ -73,7 +73,7 @@ export function InviteMemberDialog({ open, onOpenChange }: InviteMemberDialogPro
 
   const copyCredentials = async () => {
     await navigator.clipboard.writeText(
-      `Editorial Studio login\nEmail: ${email}\nTemporary password: ${tempPassword}\n\nLog in, then change your password from the Profile page.`,
+      `Content Calendar login\nEmail: ${email}\nTemporary password: ${tempPassword}\n\nLog in, then change your password from the Profile page.`,
     )
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
