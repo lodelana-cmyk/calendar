@@ -12,16 +12,18 @@ export const OPEN_GUIDE_EVENT = "open-onboarding-guide"
 // Bump the version to show a rewritten guide to everyone again.
 const seenKey = (userId: string) => `content-calendar:guide-seen:v1:${userId}`
 
-interface Step {
+export interface Step {
   route: string
   /** data-tour value of the element to spotlight; omitted = centred card */
   target?: string
   title: string
   body: string
   bullets?: string[]
+  /** Runs when the step opens, e.g. to switch to the tab it talks about */
+  onEnter?: () => void
 }
 
-const STEPS: Step[] = [
+const MAIN_STEPS: Step[] = [
   {
     route: "/",
     title: "Welcome to Content Calendar",
@@ -182,7 +184,22 @@ const STEPS: Step[] = [
 const GAP = 14
 const MARGIN = 16
 
+/** The app-wide guide. Steps aside on pages that have their own (the Lab). */
 export function OnboardingTour() {
+  const pathname = usePathname()
+  return <GuidedTour steps={MAIN_STEPS} storageKey={seenKey} active={!pathname.startsWith("/lab")} />
+}
+
+/**
+ * A spotlight tour: walks through `steps`, opening automatically the first
+ * time (remembered per user under `storageKey`) and on the Guide button while
+ * `active`.
+ */
+export function GuidedTour({ steps, storageKey, active }: {
+  steps: Step[]
+  storageKey: (userId: string) => string
+  active: boolean
+}) {
   const router = useRouter()
   const pathname = usePathname()
   const { currentUser } = useStore()
@@ -199,7 +216,7 @@ export function OnboardingTour() {
   const pathRef = useRef(pathname)
   pathRef.current = pathname
 
-  const step = STEPS[index]
+  const step = steps[index]
   const offRoute = pathname !== step.route
 
   // The Guide button resumes where you left off; "Start over" goes back to step 1
@@ -209,34 +226,37 @@ export function OnboardingTour() {
   const userId = currentUser?.id
   const markSeen = useCallback(() => {
     if (!userId) return
-    try { localStorage.setItem(seenKey(userId), new Date().toISOString()) } catch {}
-  }, [userId])
+    try { localStorage.setItem(storageKey(userId), new Date().toISOString()) } catch {}
+  }, [userId, storageKey])
 
   const close = useCallback(() => { setOpen(false); markSeen() }, [markSeen])
 
   // First visit: open automatically, once, for anyone who hasn't seen it
   const autoOpened = useRef(false)
   useEffect(() => {
-    if (!userId || autoOpened.current) return
+    if (!userId || !active || autoOpened.current) return
     autoOpened.current = true
     let seen = true
-    try { seen = !!localStorage.getItem(seenKey(userId)) } catch {}
+    try { seen = !!localStorage.getItem(storageKey(userId)) } catch {}
     if (!seen) restart()
-  }, [userId, restart])
+  }, [userId, active, storageKey, restart])
 
   // Guide button
   useEffect(() => {
+    if (!active) return
     window.addEventListener(OPEN_GUIDE_EVENT, resume)
     return () => window.removeEventListener(OPEN_GUIDE_EVENT, resume)
-  }, [resume])
+  }, [active, resume])
+
+  useEffect(() => { if (open) steps[index].onEnter?.() }, [open, index, steps])
 
   // Moving to a step takes you to its page. Only on step change, so clicking
   // to another page mid-tour isn't fought.
   useEffect(() => {
     if (!open) return
-    if (pathRef.current !== STEPS[index].route) {
+    if (pathRef.current !== steps[index].route) {
       setNavigating(true)
-      router.push(STEPS[index].route)
+      router.push(steps[index].route)
     }
   }, [open, index, router])
   useEffect(() => { if (!offRoute) setNavigating(false) }, [offRoute])
@@ -310,7 +330,7 @@ export function OnboardingTour() {
   }, [open, resolved, rect, index, offRoute])
 
   const next = useCallback(() => {
-    if (index === STEPS.length - 1) { close(); setIndex(0) }
+    if (index === steps.length - 1) { close(); setIndex(0) }
     else setIndex(i => i + 1)
   }, [index, close])
   const back = useCallback(() => setIndex(i => Math.max(0, i - 1)), [])
@@ -329,7 +349,7 @@ export function OnboardingTour() {
   }, [open, paused, next, back, close])
 
   if (!open || paused) return null
-  const last = index === STEPS.length - 1
+  const last = index === steps.length - 1
   const pad = 6
 
   return (
@@ -362,14 +382,14 @@ export function OnboardingTour() {
       >
         <div className="flex items-center justify-between gap-3">
           <span className="text-xs font-medium text-on-surface-variant tabular-nums">
-            {index + 1} of {STEPS.length}
+            {index + 1} of {steps.length}
           </span>
           <button onClick={close} aria-label="Close guide" className="p-1 -m-1 rounded-full text-on-surface-variant hover:text-on-surface transition-colors">
             <X className="h-4 w-4" />
           </button>
         </div>
         <div className="h-1 rounded-full bg-surface-container-high overflow-hidden">
-          <div className="h-full bg-primary rounded-full transition-all duration-300" style={{ width: `${((index + 1) / STEPS.length) * 100}%` }} />
+          <div className="h-full bg-primary rounded-full transition-all duration-300" style={{ width: `${((index + 1) / steps.length) * 100}%` }} />
         </div>
         <h2 className="text-[19px] font-semibold text-on-surface leading-snug">{step.title}</h2>
         {step.body && <p className="text-sm text-on-surface-variant leading-relaxed">{step.body}</p>}

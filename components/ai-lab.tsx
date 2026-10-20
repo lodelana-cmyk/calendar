@@ -1,17 +1,20 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
-import { Sparkles, Zap, PenLine, MessageSquare, Check, AlertTriangle, Copy as CopyIcon } from "lucide-react"
+import { useSearchParams } from "next/navigation"
+import { Sparkles, Zap, PenLine, MessageSquare, Check, AlertTriangle, Copy as CopyIcon, FlaskConical, Compass } from "lucide-react"
 import { useStore, useIsEditor } from "@/lib/store"
 import { useRefreshData } from "@/components/data-provider"
 import {
-  createCampaignClient, createContentItemsClient, createIdeaClient, getIdeasClient,
+  createCampaignClient, createContentItemsClient, createIdeaClient, getIdeasClient, getItemCommentsClient,
 } from "@/lib/data-client"
 import {
   PRODUCT_OPTIONS, channelBackground, parseDateString,
-  type CampaignMotion, type CampaignType, type CampaignWithItems, type ContentChannel, type ContentFormat, type IdeaWithCreator,
+  type CampaignMotion, type CampaignType, type CampaignWithItems, type ContentChannel, type ContentFormat, type IdeaWithCreator, type ItemComment,
 } from "@/lib/database.types"
+import { toPlainText } from "@/lib/mentions"
+import { GuidedTour, OPEN_GUIDE_EVENT, type Step } from "@/components/onboarding-tour"
 import { ChannelIcon } from "@/components/channel-icon"
 import { Button, ErrorText, Field, SegmentedControl, cx, fieldCls, linkCls, textareaCls } from "@/components/kit"
 
@@ -155,7 +158,7 @@ function TriageDemo() {
           onChange={e => setText(e.target.value)}
           placeholder="Start typing an idea…"
           className={cx(fieldCls, "h-12 text-base")}
-          autoFocus
+          data-tour="lab-triage-input"
         />
         <div className="flex flex-wrap items-center gap-2 text-xs text-on-surface-variant">
           Try:
@@ -381,10 +384,14 @@ function DraftReview({ result, onDone }: { result: DraftResult; onDone?: () => v
 
 // ---- 2. A comment becomes a one-click action ----
 
-function CommentDemo() {
+function CommentDemo({ initialIdeaId, initialCommentId }: { initialIdeaId?: string; initialCommentId?: string }) {
   const [ideas, setIdeas] = useState<IdeaWithCreator[]>([])
-  const [ideaId, setIdeaId] = useState("")
-  const [comment, setComment] = useState("Can you split this into multiple campaigns? One for each video stream.")
+  const [ideaId, setIdeaId] = useState(initialIdeaId ?? "")
+  const [comments, setComments] = useState<ItemComment[]>([])
+  const [loadingComments, setLoadingComments] = useState(false)
+  const [comment, setComment] = useState("")
+  const [selectedCommentId, setSelectedCommentId] = useState<string | null>(null)
+  const autoRead = useRef(initialCommentId ?? null)
   const [intent, setIntent] = useState<DecisionResult | null>(null)
   const [reading, setReading] = useState(false)
   const [drafting, setDrafting] = useState(false)
@@ -394,17 +401,50 @@ function CommentDemo() {
 
   useEffect(() => {
     getIdeasClient()
-      .then(list => { setIdeas(list); if (list.length) setIdeaId(list[list.length - 1].id) })
+      .then(list => {
+        setIdeas(list)
+        // Default to the newest idea
+        if (!initialIdeaId && list.length) setIdeaId(list[list.length - 1].id)
+      })
       .catch(() => setError("Couldn't load Inbox ideas"))
-  }, [])
+  }, [initialIdeaId])
+
+  // The selected idea's real comments
+  useEffect(() => {
+    if (!ideaId) { setComments([]); return }
+    setLoadingComments(true)
+    getItemCommentsClient(ideaId)
+      .then(setComments)
+      .catch(() => setComments([]))
+      .finally(() => setLoadingComments(false))
+  }, [ideaId])
 
   const idea = ideas.find(i => i.id === ideaId)
 
-  const readComment = async () => {
+  const readComment = async (text = comment) => {
+    if (!text.trim()) return
     setReading(true); setError(""); setIntent(null); setDraft(null)
-    try { setIntent(await lab<DecisionResult>({ action: "intent", comment, ideaTitle: idea?.title })) }
+    try { setIntent(await lab<DecisionResult>({ action: "intent", comment: text, ideaTitle: idea?.title })) }
     catch (e) { setError(e instanceof Error ? e.message : "Couldn't read the comment") }
     finally { setReading(false) }
+  }
+
+  const pickComment = (c: ItemComment) => {
+    const text = toPlainText(c.body)
+    setSelectedCommentId(c.id); setComment(text)
+    readComment(text)
+  }
+
+  // Arriving from a comment's Jev button: read that comment straight away
+  useEffect(() => {
+    if (!autoRead.current || !idea) return
+    const c = comments.find(x => x.id === autoRead.current)
+    if (c) { autoRead.current = null; pickComment(c) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [comments, idea])
+
+  const changeIdea = (id: string) => {
+    setIdeaId(id); setIntent(null); setDraft(null); setComment(""); setSelectedCommentId(null)
   }
 
   const split = async () => {
@@ -421,7 +461,7 @@ function CommentDemo() {
     <div className="flex flex-col gap-5">
       <div className="grid md:grid-cols-2 gap-4">
         <Field label="Inbox idea">
-          <select value={ideaId} onChange={e => { setIdeaId(e.target.value); setIntent(null); setDraft(null) }} className={fieldCls}>
+          <select value={ideaId} onChange={e => changeIdea(e.target.value)} className={fieldCls} data-tour="lab-idea-picker">
             {ideas.length === 0 && <option value="">No ideas in the Inbox</option>}
             {ideas.map(i => <option key={i.id} value={i.id}>{i.title}</option>)}
           </select>
@@ -430,17 +470,51 @@ function CommentDemo() {
           {idea?.brief_url ? "This idea has a Google Doc linked — Claude will try to read it." : "No Google Doc linked to this idea."}
         </div>
       </div>
-      <Field label="A teammate's comment">
-        <textarea value={comment} onChange={e => { setComment(e.target.value); setIntent(null) }} rows={2} className={textareaCls} />
+      <div className="flex flex-col gap-2" data-tour="lab-comments">
+        <span className="text-[13px] text-on-surface-variant">Comments on this idea</span>
+        {loadingComments ? (
+          <p className="text-sm text-on-surface-variant">Loading…</p>
+        ) : comments.length === 0 ? (
+          <p className="text-sm text-on-surface-variant">No comments on this idea yet. Write a test one below.</p>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {comments.map(c => (
+              <li
+                key={c.id}
+                className={cx(
+                  "rounded-xl border px-3.5 py-2.5 flex items-start gap-3 transition-colors",
+                  selectedCommentId === c.id ? "border-primary bg-surface-container-low" : "border-border bg-card",
+                )}
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-medium text-on-surface">{c.author?.full_name ?? "Someone"}</p>
+                  <p className="text-sm text-on-surface whitespace-pre-wrap">{toPlainText(c.body)}</p>
+                </div>
+                <Button variant="secondary" size="sm" onClick={() => pickComment(c)} disabled={reading}>
+                  <Zap className="h-3.5 w-3.5" /> Ask Jev
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      <Field label="Or write a test comment">
+        <textarea
+          value={comment}
+          onChange={e => { setComment(e.target.value); setSelectedCommentId(null); setIntent(null) }}
+          rows={2}
+          placeholder="e.g. Can you split this into multiple campaigns?"
+          className={textareaCls}
+        />
       </Field>
       <div>
-        <Button onClick={readComment} disabled={reading || !comment.trim() || !ideaId}>
-          <MessageSquare className="h-4 w-4" /> {reading ? "Reading…" : "Post comment"}
+        <Button onClick={() => readComment()} disabled={reading || !comment.trim() || !ideaId}>
+          <MessageSquare className="h-4 w-4" /> {reading ? "Jev is reading…" : "Ask Jev about this comment"}
         </Button>
       </div>
 
       {top && (
-        <div className="rounded-2xl border border-border bg-card p-4 flex flex-col gap-4">
+        <div className="rounded-2xl border border-border bg-card p-4 flex flex-col gap-4" data-tour="lab-intent">
           <div className="flex flex-col gap-1">
             <span className="text-xs text-on-surface-variant">What the comment is asking for</span>
             <ProbabilityBars decision={top} />
@@ -499,7 +573,7 @@ function PlanDemo() {
   return (
     <div className="flex flex-col gap-5">
       <Field label="Paste a messy plan">
-        <textarea value={text} onChange={e => setText(e.target.value)} rows={6} placeholder="Brain-dump the plan here…" className={textareaCls} />
+        <textarea value={text} onChange={e => setText(e.target.value)} rows={6} placeholder="Brain-dump the plan here…" className={textareaCls} data-tour="lab-plan" />
       </Field>
       <div className="flex flex-wrap items-center gap-3">
         <Button onClick={run} disabled={loading || text.trim().length < 10}>
@@ -517,17 +591,105 @@ function PlanDemo() {
 
 type Tab = "triage" | "comment" | "plan"
 
+const labSeenKey = (userId: string) => `content-calendar:lab-guide-seen:v1:${userId}`
+
 export function AiLab() {
-  const [tab, setTab] = useState<Tab>("triage")
+  const params = useSearchParams()
+  const initialTab = params.get("tab")
+  const [tab, setTab] = useState<Tab>(initialTab === "comment" || initialTab === "plan" ? initialTab : "triage")
+
+  const steps = useMemo<Step[]>(() => [
+    {
+      route: "/lab",
+      title: "Welcome to the Lab",
+      body: "The Lab shows how two kinds of AI work together on your real campaigns and ideas.",
+      bullets: [
+        "Claude writes: it reads documents and drafts campaigns.",
+        "Jev decides: it makes fast, structured calls (which campaign, which channel, is this a duplicate, what is this comment asking for), each with a confidence score.",
+        "You approve: nothing is added to the calendar until you click.",
+      ],
+    },
+    {
+      route: "/lab",
+      target: "lab-tabs",
+      title: "Three demos",
+      body: "Each tab shows one way Claude and Jev help.",
+      bullets: [
+        "Sort an idea: Jev sorts a new idea as you type.",
+        "Comment to action: a teammate's comment becomes a one-click action.",
+        "Check a plan: Claude drafts a plan and Jev checks every item.",
+      ],
+    },
+    {
+      route: "/lab",
+      target: "lab-triage-input",
+      onEnter: () => setTab("triage"),
+      title: "Sort an idea",
+      body: "Type an idea, or click one of the examples below the box. Jev answers seven questions at once: campaign, channel, format, product, audience, priority and whether it's a duplicate.",
+      bullets: [
+        "Each answer has a confidence bar, plus the runner-up answers.",
+        "The line underneath says which model decided, and how many milliseconds it took.",
+        "Add to Inbox saves the idea with those suggestions.",
+      ],
+    },
+    {
+      route: "/lab",
+      target: "lab-idea-picker",
+      onEnter: () => setTab("comment"),
+      title: "Comment to action",
+      body: "Pick an Inbox idea. If it has a Google Doc linked, Claude will read it when drafting.",
+    },
+    {
+      route: "/lab",
+      target: "lab-comments",
+      onEnter: () => setTab("comment"),
+      title: "Ask Jev about a comment",
+      body: "The idea's real comments are listed here. Click Ask Jev on one (or write a test comment) and Jev decides what it's asking for: a split, a promotion, a date change, an approval, a blocker, a question, or nothing.",
+      bullets: [
+        "You can also do this from the Inbox: every comment on an idea has an Ask Jev button.",
+      ],
+    },
+    {
+      route: "/lab",
+      onEnter: () => setTab("comment"),
+      title: "Split into campaigns",
+      body: "When a comment asks for a split, a Split into campaigns button appears.",
+      bullets: [
+        "Claude reads the idea, its notes, the Google Doc and the comment, then drafts one campaign per stream of work.",
+        "Jev checks each campaign against your live ones (add to an existing campaign, or create new?) and each item for channel fit and duplicates.",
+        "You review, change anything you like, and click Add to calendar. Only editors can add.",
+        "If the Google Doc isn't shared publicly, paste its text into the box that appears.",
+      ],
+    },
+    {
+      route: "/lab",
+      target: "lab-plan",
+      onEnter: () => setTab("plan"),
+      title: "Check a plan",
+      body: "Paste a messy plan, or click Use a sample plan, then Draft and check. Claude groups it into campaigns with dated items, and Jev flags anything odd, like a Reel on LinkedIn or a possible duplicate.",
+    },
+    {
+      route: "/lab",
+      target: "lab-guide",
+      title: "That's the Lab",
+      body: "Replay this guide any time from here, or from Guide in the top bar while you're in the Lab.",
+    },
+  ], [])
+
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-8 max-w-5xl mx-auto flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <h1 className="text-[28px] font-semibold text-on-surface tracking-tight flex items-center gap-2">
-          <Sparkles className="h-6 w-6" /> AI Lab
-        </h1>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-[28px] font-semibold text-on-surface tracking-tight flex items-center gap-2">
+            <FlaskConical className="h-6 w-6" /> Lab
+          </h1>
+          <Button variant="secondary" size="sm" onClick={() => window.dispatchEvent(new Event(OPEN_GUIDE_EVENT))} data-tour="lab-guide">
+            <Compass className="h-3.5 w-3.5" /> How the Lab works
+          </Button>
+        </div>
         <p className="text-sm text-on-surface-variant max-w-2xl">
           <span className="font-semibold text-on-surface">Claude writes, Jev decides.</span> Claude handles the open-ended work: reading docs and drafting campaigns.
-          The fast, structured calls (which campaign, which channel, is this a duplicate, what is this comment asking for) go to a decision model,
+          The fast, structured calls (which campaign, which channel, is this a duplicate, what is this comment asking for) go to Jev,
           each with a confidence. Everything here runs on your real campaigns and ideas.
         </p>
         <p className="text-xs text-on-surface-variant max-w-2xl">
@@ -535,17 +697,18 @@ export function AiLab() {
         </p>
       </div>
 
-      <SegmentedControl
-        ariaLabel="Lab demos"
-        value={tab}
-        onChange={setTab}
-        options={[
-          { value: "triage", label: "Sort an idea" },
-          { value: "comment", label: "Comment to action" },
-          { value: "plan", label: "Check a plan" },
-        ]}
-        className="self-start"
-      />
+      <div data-tour="lab-tabs" className="self-start">
+        <SegmentedControl
+          ariaLabel="Lab demos"
+          value={tab}
+          onChange={setTab}
+          options={[
+            { value: "triage", label: "Sort an idea" },
+            { value: "comment", label: "Comment to action" },
+            { value: "plan", label: "Check a plan" },
+          ]}
+        />
+      </div>
 
       <div className="flex flex-col gap-1">
         <h2 className="text-[19px] font-semibold text-on-surface">
@@ -555,14 +718,16 @@ export function AiLab() {
         </h2>
         <p className="text-sm text-on-surface-variant">
           {tab === "triage" && "Seven decisions at once: campaign, channel, format, product, audience, priority and a duplicate check."}
-          {tab === "comment" && "The comment is read the moment it's posted. If it asks for a split, Claude reads the idea and its doc and drafts the campaigns; each is matched against your live campaigns before anything is created."}
+          {tab === "comment" && "Pick an idea and ask Jev about one of its comments. If it asks for a split, Claude reads the idea and its doc and drafts the campaigns; each is matched against your live campaigns before anything is created."}
           {tab === "plan" && "Claude turns a brain-dump into campaigns and dated items. Each item is checked for channel fit and duplicates, and each campaign matched to a live one."}
         </p>
       </div>
 
       {tab === "triage" && <TriageDemo />}
-      {tab === "comment" && <CommentDemo />}
+      {tab === "comment" && <CommentDemo initialIdeaId={params.get("idea") ?? undefined} initialCommentId={params.get("comment") ?? undefined} />}
       {tab === "plan" && <PlanDemo />}
+
+      <GuidedTour steps={steps} storageKey={labSeenKey} active />
     </div>
   )
 }

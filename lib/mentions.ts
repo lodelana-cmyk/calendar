@@ -44,3 +44,8 @@ export function toStorage(text: string, mentions: Mention[]): string {
   }
   return out
 }
+
+/** Comment text with mentions shown as plain "@Name" */
+export function toPlainText(body: string): string {
+  return body.replace(MENTION_RE, (_, name) => `@${name}`)
+}

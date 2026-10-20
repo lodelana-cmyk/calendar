@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { User, Settings, LogOut, Compass, Sparkles } from "lucide-react"
+import { User, Settings, LogOut, Compass, FlaskConical } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useStore } from "@/lib/store"
 import { NotificationBell } from "@/components/notification-bell"
@@ -43,7 +43,8 @@ export function TopBar() {
   return (
     <header className="sticky top-0 z-40 bg-background/90 backdrop-blur-md border-b border-border">
       <div className="px-4 sm:px-6 lg:px-8 py-2.5 grid grid-cols-[auto_1fr] md:grid-cols-[1fr_auto_1fr] items-center gap-x-4 gap-y-2">
-        <Link href="/" className="justify-self-start text-[15px] font-semibold tracking-tight text-on-surface whitespace-nowrap">
+        <Link href="/" className="justify-self-start inline-flex items-center gap-2 text-[15px] font-semibold tracking-tight text-on-surface whitespace-nowrap">
+          <img src="/icon.svg" alt="" className="h-7 w-7" />
           Content Calendar
         </Link>
 
@@ -70,6 +71,19 @@ export function TopBar() {
         </nav>
 
         <div className="justify-self-end row-start-1 col-start-2 md:col-start-3 flex items-center gap-1">
+          <Link
+            href="/lab"
+            aria-current={pathname.startsWith("/lab") ? "page" : undefined}
+            className={cx(
+              "h-9 px-3 inline-flex items-center gap-1.5 rounded-full text-sm font-medium transition-colors",
+              pathname.startsWith("/lab")
+                ? "bg-primary text-primary-foreground"
+                : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low",
+            )}
+          >
+            <FlaskConical className="h-4 w-4" />
+            <span className="hidden sm:inline">Lab</span>
+          </Link>
           <button
             data-tour="guide"
             onClick={() => window.dispatchEvent(new Event(OPEN_GUIDE_EVENT))}
@@ -95,7 +109,6 @@ export function TopBar() {
                 {currentUser?.role && <p className="text-xs text-on-surface-variant truncate">{currentUser.role}</p>}
               </div>
               {[
-                { href: "/lab",      label: "AI Lab",   icon: Sparkles },
                 { href: "/profile",  label: "Profile",  icon: User },
                 { href: "/settings", label: "Settings", icon: Settings },
               ].map(item => (
