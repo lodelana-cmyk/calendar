@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { User, Settings, LogOut, Compass } from "lucide-react"
+import { User, Settings, LogOut, Compass, Sparkles } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useStore } from "@/lib/store"
 import { NotificationBell } from "@/components/notification-bell"
@@ -95,6 +95,7 @@ export function TopBar() {
                 {currentUser?.role && <p className="text-xs text-on-surface-variant truncate">{currentUser.role}</p>}
               </div>
               {[
+                { href: "/lab",      label: "AI Lab",   icon: Sparkles },
                 { href: "/profile",  label: "Profile",  icon: User },
                 { href: "/settings", label: "Settings", icon: Settings },
               ].map(item => (
