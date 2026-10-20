@@ -531,7 +531,7 @@ export function AiLab() {
           each with a confidence. Everything here runs on your real campaigns and ideas.
         </p>
         <p className="text-xs text-on-surface-variant max-w-2xl">
-          Jev isn&apos;t connected yet, so decisions currently run on a fast Claude model standing in for it. Each result says which model answered.
+          Decisions run on Jev by TypeSafe AI. If Jev is ever unavailable, a fast Claude model stands in, and each result says which model answered.
         </p>
       </div>
 
