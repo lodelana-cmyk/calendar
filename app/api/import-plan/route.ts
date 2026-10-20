@@ -1,4 +1,5 @@
 import { generateText, Output } from "ai"
+import { createAnthropic } from "@ai-sdk/anthropic"
 import { z } from "zod"
 import { createClient } from "@/lib/supabase/server"
 import { PRODUCT_OPTIONS } from "@/lib/database.types"
@@ -9,7 +10,13 @@ export const maxDuration = 60
 // works with zero configuration; override in Vercel's project env vars (then
 // redeploy) to use a paid/BYOK model instead — no code change needed either
 // way. See the free-tier model list: vercel.com/ai-gateway/models?freeTier=true
-const MODEL = process.env.AI_GATEWAY_MODEL || "inclusionai/ling-3.0-flash-fin"
+//
+// With ANTHROPIC_API_KEY set, requests go straight to Claude on that key
+// instead (ANTHROPIC_MODEL picks the model; Sonnet 5.5 by default).
+const anthropicKey = process.env.ANTHROPIC_API_KEY
+const MODEL = anthropicKey
+  ? createAnthropic({ apiKey: anthropicKey })(process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5")
+  : process.env.AI_GATEWAY_MODEL || "inclusionai/ling-3.0-flash-fin"
 
 const itemSchema = z.object({
   title: z.string().describe("The content item title, short and actionable"),
