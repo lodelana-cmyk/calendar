@@ -287,6 +287,8 @@ export async function addItemCommentClient(itemId: string, body: string): Promis
     .select("*, author:profiles(*)")
     .single()
   if (error) throw error
+  // Mentions also go to Slack — in the background, never blocking the comment
+  if (/@\[[^\]]*\]\([0-9a-fA-F-]{36}\)/.test(body)) sendSlackNotifications({ commentId: (data as ItemComment).id })
   return data as ItemComment
 }
 
@@ -329,4 +331,14 @@ export async function notifyTeamClient(itemId: string): Promise<void> {
   const supabase = createClient()
   const { error } = await supabase.rpc("notify_team", { p_item_id: itemId })
   if (error) throw error
+  sendSlackNotifications({ itemId })
+}
+
+/** Mirror the notifications an action just created to Slack DMs. Fire-and-forget: Slack being down or not set up never affects the app. */
+function sendSlackNotifications(body: { commentId: string } | { itemId: string }) {
+  fetch("/api/slack-notify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  }).catch(() => {})
 }
