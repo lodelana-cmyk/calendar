@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { X, Trash2 } from "lucide-react"
 import { useStore, useIsEditor } from "@/lib/store"
 import {
@@ -59,6 +59,15 @@ export function IdeaDialog({ idea, onClose, onSaved }: Props) {
     prevCount.current = comments.length
   }, [comments, loadingComments])
 
+  // Notes grow to fit what's written, up to half the screen, then scroll
+  const notesRef = useRef<HTMLTextAreaElement>(null)
+  useLayoutEffect(() => {
+    const el = notesRef.current
+    if (!el) return
+    el.style.height = "auto"
+    el.style.height = `${Math.min(el.scrollHeight + 2, Math.round(window.innerHeight * 0.5))}px`
+  }, [notes])
+
   const dirty = title !== idea.title || notes !== (idea.notes ?? "") || docUrl !== (idea.brief_url ?? "")
 
   const handleSave = async () => {
@@ -108,7 +117,7 @@ export function IdeaDialog({ idea, onClose, onSaved }: Props) {
           role="dialog"
           aria-modal="true"
           aria-label={idea.title}
-          className="bg-background rounded-2xl border border-border shadow-2xl w-full max-w-2xl max-h-[90vh] pointer-events-auto flex flex-col overflow-hidden"
+          className="bg-background rounded-2xl border border-border shadow-2xl w-full max-w-4xl max-h-[92vh] pointer-events-auto flex flex-col overflow-hidden"
         >
           {/* Header */}
           <div className="flex items-start justify-between gap-3 px-6 pt-6 pb-4 border-b border-border flex-shrink-0">
@@ -134,7 +143,7 @@ export function IdeaDialog({ idea, onClose, onSaved }: Props) {
                     <input value={title} onChange={e => { setTitle(e.target.value); setError("") }} className={fieldCls} />
                   </Field>
                   <Field label="Notes">
-                    <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} placeholder="Context, angle, references…" className={textareaCls} />
+                    <textarea ref={notesRef} value={notes} onChange={e => setNotes(e.target.value)} rows={3} placeholder="Context, angle, references…" className={textareaCls} />
                   </Field>
                   <Field label="Google Doc link" hint="Paste a Google Docs, Sheets or Slides link to preview it here.">
                     <input value={docUrl} onChange={e => setDocUrl(e.target.value)} placeholder="https://docs.google.com/document/d/…" className={fieldCls} />
