@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Content Calendar: a calendar page whose days are channel-coloured cards -->
+  <rect width="64" height="64" rx="14" fill="#141414"/>
+  <rect x="11" y="14" width="42" height="5" rx="2.5" fill="#ffffff" fill-opacity="0.35"/>
+  <rect x="19" y="9" width="5" height="10" rx="2.5" fill="#ffffff"/>
+  <rect x="40" y="9" width="5" height="10" rx="2.5" fill="#ffffff"/>
+  <rect x="11" y="22.5" width="19.5" height="14" rx="4" fill="#e00000"/>
+  <rect x="33.5" y="22.5" width="19.5" height="14" rx="4" fill="#0a66c2"/>
+  <rect x="11" y="39.5" width="19.5" height="14" rx="4" fill="#15803d"/>
+  <rect x="33.5" y="39.5" width="19.5" height="14" rx="4" fill="#ffffff"/>
+</svg>
