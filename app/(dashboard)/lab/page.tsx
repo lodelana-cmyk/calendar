@@ -1,5 +1,6 @@
+import { Suspense } from "react"
 import { AiLab } from "@/components/ai-lab"
 
 export default function LabPage() {
-  return <AiLab />
+  return <Suspense><AiLab /></Suspense>
 }

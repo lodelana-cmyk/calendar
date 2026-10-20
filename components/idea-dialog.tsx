@@ -1,13 +1,14 @@
 "use client"
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
-import { X, Trash2 } from "lucide-react"
+import Link from "next/link"
+import { X, Trash2, Zap } from "lucide-react"
 import { useStore, useIsEditor } from "@/lib/store"
 import {
   updateContentItemClient, getItemCommentsClient, addItemCommentClient, deleteItemCommentClient,
 } from "@/lib/data-client"
 import type { IdeaWithCreator, ItemComment } from "@/lib/database.types"
-import { parseMentions } from "@/lib/mentions"
+import { parseMentions, toPlainText } from "@/lib/mentions"
 import { MentionInput } from "@/components/mention-input"
 import { GoogleDocEmbed } from "@/components/google-doc-embed"
 import { Avatar, Button, ErrorText, Field, fieldCls, textareaCls } from "@/components/kit"
@@ -41,6 +42,25 @@ export function IdeaDialog({ idea, onClose, onSaved }: Props) {
   const [loadingComments, setLoadingComments] = useState(true)
   const [commentError, setCommentError] = useState("")
   const endRef = useRef<HTMLDivElement>(null)
+
+  // "Ask Jev" on a comment: what is it asking for?
+  const [jev, setJev] = useState<Record<string, { loading?: boolean; answer?: string; confidence?: number; engine?: string; ms?: number; error?: string }>>({})
+  const askJev = async (c: ItemComment) => {
+    setJev(prev => ({ ...prev, [c.id]: { loading: true } }))
+    try {
+      const res = await fetch("/api/lab", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "intent", comment: toPlainText(c.body), ideaTitle: idea.title }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Jev couldn't read that")
+      const d = data.decisions.intent
+      setJev(prev => ({ ...prev, [c.id]: { answer: d.answer, confidence: d.confidence, engine: data.engineLabel, ms: data.ms } }))
+    } catch (e) {
+      setJev(prev => ({ ...prev, [c.id]: { error: e instanceof Error ? e.message : "Jev couldn't read that" } }))
+    }
+  }
 
   useEffect(() => {
     getItemCommentsClient(idea.id)
@@ -185,10 +205,18 @@ export function IdeaDialog({ idea, onClose, onSaved }: Props) {
                         <span className="text-[11px] text-on-surface-variant">
                           {new Date(c.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
                         </span>
+                        <button
+                          onClick={() => askJev(c)}
+                          disabled={jev[c.id]?.loading}
+                          className="ml-auto inline-flex items-center gap-1 rounded-full border border-outline-variant px-2 py-0.5 text-[11px] font-medium text-on-surface-variant hover:text-on-surface hover:border-on-surface/30 transition-colors disabled:opacity-50"
+                          title="Ask Jev what this comment is asking for"
+                        >
+                          <Zap className="h-3 w-3" /> {jev[c.id]?.loading ? "Asking…" : "Ask Jev"}
+                        </button>
                         {isOwn && (
                           <button
                             onClick={() => removeComment(c.id)}
-                            className="ml-auto opacity-0 group-hover:opacity-100 p-0.5 text-on-surface-variant hover:text-error transition-all"
+                            className="opacity-0 group-hover:opacity-100 p-0.5 text-on-surface-variant hover:text-error transition-all"
                             aria-label="Delete comment"
                           >
                             <Trash2 className="h-3 w-3" />
@@ -204,6 +232,30 @@ export function IdeaDialog({ idea, onClose, onSaved }: Props) {
                           )
                         )}
                       </p>
+                      {jev[c.id] && !jev[c.id].loading && (
+                        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                          {jev[c.id].error ? (
+                            <span className="text-error">{jev[c.id].error}</span>
+                          ) : (
+                            <>
+                              <span className="inline-flex items-center gap-1 text-on-surface">
+                                <Zap className="h-3 w-3" />
+                                <span className="font-semibold">{jev[c.id].answer}</span>
+                                <span className="text-on-surface-variant tabular-nums">{Math.round((jev[c.id].confidence ?? 0) * 100)}%</span>
+                              </span>
+                              {jev[c.id].answer === "Split into multiple campaigns" && (
+                                <Link
+                                  href={`/lab?tab=comment&idea=${idea.id}&comment=${c.id}`}
+                                  className="inline-flex items-center rounded-full bg-primary text-primary-foreground px-2.5 py-0.5 font-medium hover:bg-primary/85 transition-colors"
+                                >
+                                  Split into campaigns →
+                                </Link>
+                              )}
+                              <span className="text-on-surface-variant">{jev[c.id].engine} · {jev[c.id].ms} ms</span>
+                            </>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )
