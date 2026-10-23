@@ -1,9 +1,8 @@
 "use client"
 
 import { createClient } from "@/lib/supabase/client"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import Link from "next/link"
 import { Loader2, Mail, ChevronDown, ChevronUp, CheckCircle2 } from "lucide-react"
 
 function GoogleIcon() {
@@ -31,6 +30,13 @@ export default function LoginPage() {
   const [resendSuccess, setResendSuccess]     = useState(false)
   const router = useRouter()
 
+  // Sent back here after signing in with an account that isn't allowed
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get("error")
+    if (code === "not-allowed") setError("Content Calendar is only for Threecolts accounts. Sign in with your @threecolts.com Google account.")
+    else if (code === "auth_error") setError("Sign-in didn't complete. Please try again.")
+  }, [])
+
   const handleGoogleSignIn = async () => {
     const supabase = createClient()
     setIsGoogleLoading(true)
@@ -41,6 +47,8 @@ export default function LoginPage() {
         redirectTo: REDIRECT_URL,
         // Request email scope so Supabase can match against existing accounts
         scopes: "email profile",
+        // Show only Threecolts Google accounts in the picker (the server enforces it too)
+        queryParams: { hd: "threecolts.com" },
       },
     })
     if (error) {
@@ -235,8 +243,7 @@ export default function LoginPage() {
           </div>
 
           <p className="text-center text-sm text-on-surface-variant mt-6">
-            Don&apos;t have an account?{" "}
-            <Link href="/signup" className="text-primary font-medium hover:underline">Sign up</Link>
+            For Threecolts staff only. New to the team? Ask an editor to invite you.
           </p>
         </div>
       </div>
