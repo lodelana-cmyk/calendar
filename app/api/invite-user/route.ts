@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { createClient as createAdminClient } from "@supabase/supabase-js"
+import { ALLOWED_DOMAINS, isAllowedEmail, isAllowedUser } from "@/lib/access"
 
 /**
  * Invite a new team member. Creates a confirmed auth user with a temporary
@@ -10,13 +11,17 @@ import { createClient as createAdminClient } from "@supabase/supabase-js"
  * Requires SUPABASE_SERVICE_ROLE_KEY (server-only).
  */
 export async function POST(req: Request) {
-  // Only authenticated users can invite
+  // Only editors with a Threecolts account can invite
   const supabase = await createClient()
   const {
     data: { user: inviter },
   } = await supabase.auth.getUser()
-  if (!inviter) {
+  if (!inviter || !isAllowedUser(inviter)) {
     return Response.json({ error: "Unauthorized" }, { status: 401 })
+  }
+  const { data: inviterProfile } = await supabase.from("profiles").select("app_role").eq("id", inviter.id).single()
+  if (inviterProfile?.app_role !== "editor") {
+    return Response.json({ error: "Only editors can invite people." }, { status: 403 })
   }
 
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -32,6 +37,9 @@ export async function POST(req: Request) {
 
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return Response.json({ error: "Enter a valid email address." }, { status: 400 })
+  }
+  if (!isAllowedEmail(email.trim())) {
+    return Response.json({ error: `Only ${ALLOWED_DOMAINS.map(d => "@" + d).join(" or ")} email addresses can be invited.` }, { status: 400 })
   }
   if (!fullName || fullName.trim().length < 2) {
     return Response.json({ error: "Enter the member's full name." }, { status: 400 })

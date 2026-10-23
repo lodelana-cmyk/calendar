@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { isAllowedUser } from '@/lib/access'
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl
@@ -8,9 +9,13 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const supabase = await createClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`)
+      if (!isAllowedUser(data.user)) {
+        await supabase.auth.signOut()
+        return NextResponse.redirect(`${origin}/login?error=not-allowed`)
+      }
+      return NextResponse.redirect(`${origin}${next.startsWith('/') ? next : '/'}`)
     }
   }
 
